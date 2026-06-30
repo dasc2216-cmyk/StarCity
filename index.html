@@ -1,0 +1,1284 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0a0b0d">
+<title>Star City</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Spectral:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════════════════════════
+   TOKENS
+══════════════════════════════════════════ */
+:root {
+  --bg:       #0a0b0d;
+  --bg-d:     #14161a;
+  --bg-m:     #1d1f26;
+  --bg-l:     #2a2d35;
+  --line:     #3a3d47;
+  --line2:    #50546a;
+  --text:     #e8e3d6;
+  --text-m:   #a8a397;
+  --text-d:   #6c6a62;
+  --copper:   #c08552;
+  --copper-b: #e3a063;
+  --jade:     #6b9080;
+  --jade-b:   #8db0a0;
+  --blood:    #8b3a3a;
+  --gold:     #c9a449;
+  --amber:    #fbbf24;
+  --p1c:      #4a8db8;
+  --p2c:      #b85a5a;
+  --p1g:      rgba(74,141,184,.4);
+  --p2g:      rgba(184,90,90,.4);
+  /* cell size 2.5D */
+  --cs: clamp(16px, calc((min(100vw,480px) - 32px) / 15), 22px);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:var(--bg);touch-action:manipulation}
+body{font-family:'Spectral',serif;color:var(--text);display:flex;flex-direction:column;align-items:center;position:relative}
+
+/* ══ BG ══════════════════════════════════ */
+#bg-grid{position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:linear-gradient(rgba(201,164,73,.035) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(201,164,73,.035) 1px,transparent 1px);
+  background-size:36px 36px}
+#bg-vig{position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse at center,transparent 35%,rgba(0,0,0,.88) 100%)}
+
+/* ══ SCREENS ═════════════════════════════ */
+.screen{position:relative;z-index:1;width:100%;max-width:480px;
+  padding:16px;display:none;flex-direction:column;align-items:center;gap:12px;
+  height:100dvh;overflow-y:auto;scrollbar-width:none}
+.screen::-webkit-scrollbar{display:none}
+.screen.on{display:flex}
+
+/* ══ LOGO ════════════════════════════════ */
+.logo{text-align:center;padding:8px 0 4px}
+.logo-s{font-family:'Cinzel',serif;font-size:clamp(34px,10vw,52px);font-weight:900;
+  letter-spacing:.18em;color:var(--gold);
+  text-shadow:0 0 40px rgba(201,164,73,.35),0 2px 0 rgba(0,0,0,.8);display:block;line-height:1}
+.logo-c{font-family:'Cinzel',serif;font-size:clamp(12px,3.5vw,17px);font-weight:500;
+  letter-spacing:.55em;color:var(--copper);display:block;margin-top:4px}
+.logo-v{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-d);
+  letter-spacing:.18em;margin-top:5px;display:block}
+
+/* ══ DIVIDER ══════════════════════════════ */
+.div{width:100%;display:flex;align-items:center;gap:8px;
+  font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--text-d)}
+.div::before,.div::after{content:'';flex:1;height:1px;background:var(--line)}
+
+/* ══ BUTTONS ══════════════════════════════ */
+.btn{width:100%;padding:12px;border-radius:6px;border:1px solid var(--line);
+  background:var(--bg-d);color:var(--text-m);font-family:'Cinzel',serif;
+  font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;
+  cursor:pointer;transition:all .16s;user-select:none;-webkit-tap-highlight-color:transparent}
+.btn:active{transform:scale(.97)}
+.btn:hover{border-color:var(--copper);color:var(--text);background:var(--bg-m)}
+.btn.primary{background:rgba(192,133,82,.1);border-color:var(--copper);color:var(--copper-b)}
+.btn.primary:hover{background:rgba(192,133,82,.2)}
+.btn.jade{background:rgba(107,144,128,.1);border-color:var(--jade);color:var(--jade-b)}
+.btn.jade:hover{background:rgba(107,144,128,.2)}
+.btn.ghost{background:transparent;border-color:var(--line);color:var(--text-d);font-size:10px;padding:8px}
+.btn.sm{width:auto;padding:8px 14px;font-size:9px}
+.btn:disabled{opacity:.35;pointer-events:none}
+
+/* ══ INPUT ════════════════════════════════ */
+.field{width:100%;display:flex;flex-direction:column;gap:4px}
+.field label{font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--text-d)}
+.field input{width:100%;padding:10px 12px;border-radius:5px;border:1px solid var(--line);
+  background:var(--bg-m);color:var(--text);font-family:'JetBrains Mono',monospace;
+  font-size:14px;outline:none;transition:border-color .14s;
+  -webkit-appearance:none}
+.field input:focus{border-color:var(--copper)}
+.field input::placeholder{color:var(--text-d)}
+
+/* ══ STATUS BOX ══════════════════════════ */
+.sbox{width:100%;background:var(--bg-m);border:1px solid var(--line);border-radius:6px;
+  padding:10px 12px;display:flex;align-items:center;gap:8px}
+.sdot{width:8px;height:8px;border-radius:50%;flex-shrink:0;background:var(--text-d)}
+.sdot.wait{background:var(--amber);animation:pdot 1.4s ease-in-out infinite}
+.sdot.ok{background:var(--jade-b)}
+.sdot.err{background:var(--blood)}
+@keyframes pdot{0%,100%{opacity:1}50%{opacity:.2}}
+.stxt{font-size:11px;color:var(--text-m);line-height:1.4}
+.stxt b{color:var(--text)}
+
+/* ══ CODE BOX ════════════════════════════ */
+.cbox{width:100%;background:var(--bg-m);border:1px solid var(--gold);border-radius:6px;
+  padding:14px;text-align:center}
+.cbox-lbl{font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--text-d);margin-bottom:6px}
+.cbox-val{font-family:'JetBrains Mono',monospace;font-size:30px;font-weight:700;
+  color:var(--gold);letter-spacing:.28em}
+.cbox-sub{font-size:10px;color:var(--text-d);margin-top:5px;font-style:italic}
+
+/* ══ DECK CARDS ══════════════════════════ */
+.dgrid{width:100%;display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.dk{background:var(--bg-m);border:1px solid var(--line);border-radius:7px;
+  padding:9px;cursor:pointer;transition:all .16s;position:relative;overflow:hidden;
+  -webkit-tap-highlight-color:transparent}
+.dk::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  border-radius:7px 7px 0 0;transition:background .16s}
+.dk.med::before{background:var(--blood)}
+.dk.sam::before{background:var(--p1c)}
+.dk.sel{border-color:var(--gold)}
+.dk.sel::before{background:var(--gold) !important}
+.dk-name{font-family:'Cinzel',serif;font-size:10px;font-weight:700;
+  color:var(--text);letter-spacing:.05em;margin-bottom:2px}
+.dk-arq{font-size:8px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px}
+.dk-arq.med{color:var(--copper)}.dk-arq.sam{color:var(--jade)}
+.dk-desc{font-size:7.5px;color:var(--text-d);line-height:1.4;font-style:italic}
+.dk-chk{position:absolute;top:5px;right:7px;font-size:11px;
+  color:var(--gold);opacity:0;transition:opacity .15s}
+.dk.sel .dk-chk{opacity:1}
+
+/* ══ BACK BTN ════════════════════════════ */
+.back{align-self:flex-start;font-size:9px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--text-d);background:none;border:none;cursor:pointer;
+  font-family:'Cinzel',serif;padding:0;transition:color .14s}
+.back:hover{color:var(--text-m)}
+
+/* ══ TOAST ════════════════════════════════ */
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(12px);
+  background:var(--bg-l);border:1px solid var(--line);border-radius:6px;
+  padding:8px 16px;font-size:11px;color:var(--text-m);white-space:nowrap;
+  opacity:0;pointer-events:none;z-index:300;transition:all .22s}
+#toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast.ok{border-color:var(--jade);color:var(--jade-b)}
+#toast.err{border-color:var(--blood);color:#e08080}
+
+/* ══════════════════════════════════════════
+   GAME SCREEN
+══════════════════════════════════════════ */
+#s-game{padding:0;gap:0;justify-content:space-between;overflow:hidden}
+
+/* HUD top */
+#hud{width:100%;display:flex;align-items:center;justify-content:space-between;
+  padding:6px 10px;flex-shrink:0;gap:6px}
+.hud-title{font-family:'Cinzel',serif;font-size:13px;font-weight:700;
+  color:var(--gold);letter-spacing:.1em}
+.hpills{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}
+.pill{font-size:9px;font-weight:500;color:var(--text-d);background:var(--bg-m);
+  border:1px solid var(--line);border-radius:20px;padding:2px 8px;white-space:nowrap}
+.pill b{color:var(--text)}.pill.pts b{color:var(--gold)}.pill.tur b{color:var(--p1c)}
+
+/* LOG */
+#log{width:100%;padding:2px 10px;font-size:10px;color:var(--text-d);
+  line-height:1.4;flex-shrink:0;min-height:18px}
+#log em{color:var(--gold);font-style:normal}
+#log strong{color:var(--text-m)}
+
+/* BOARD VIEWPORT */
+#board-vp{flex:1;display:flex;align-items:center;justify-content:center;
+  overflow:hidden;width:100%;position:relative}
+
+/* 2.5D ISO STAGE */
+.iso-stage{
+  transform:rotateX(42deg) rotateZ(-25deg) scale(.82);
+  transform-style:preserve-3d;
+  will-change:transform;
+  filter:drop-shadow(0 16px 36px rgba(0,0,0,.8));
+}
+#board{
+  display:grid;
+  grid-template-columns:repeat(15,var(--cs));
+  grid-template-rows:repeat(15,var(--cs));
+  gap:1px;background:var(--line);
+  border:1px solid var(--line);border-radius:3px;overflow:hidden;
+}
+
+/* CELLS */
+.cell{width:var(--cs);height:var(--cs);background:#14161a;
+  position:relative;cursor:pointer;transition:background .1s}
+.cell.ze{background:rgba(139,58,58,.09)}
+.cell.zc{background:#14161a}
+.cell.zy{background:rgba(74,141,184,.09)}
+.cell:hover:not(.sel){background:rgba(201,164,73,.1)}
+.cell.sel::after{content:'';position:absolute;inset:0;
+  border:1px solid var(--gold);z-index:5;
+  animation:pgold 1.6s ease-in-out infinite}
+@keyframes pgold{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* OVERLAYS */
+.cell .ov{position:absolute;inset:0;z-index:4;pointer-events:none;opacity:0}
+.cell.v-summon .ov{opacity:1;background:rgba(40,200,100,.22);
+  box-shadow:inset 0 0 0 1px rgba(40,200,100,.4);animation:pov 1.8s ease-in-out infinite}
+.cell.v-move .ov{opacity:1;background:rgba(30,130,255,.22);
+  box-shadow:inset 0 0 0 1px rgba(30,130,255,.4)}
+.cell.v-atk .ov{opacity:1;background:rgba(220,50,60,.28);
+  box-shadow:inset 0 0 0 1px rgba(220,50,60,.5);animation:pov 1.3s ease-in-out infinite}
+@keyframes pov{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* PIECES */
+.cell.pp1::before,.cell.pp2::before{
+  content:'';position:absolute;inset:14%;border-radius:50%;z-index:2}
+.cell.pp1::before{background:radial-gradient(circle at 35% 30%,#70AADC,#2A5888);
+  box-shadow:2px 3px 0 rgba(0,0,0,.85),0 0 7px var(--p1g)}
+.cell.pp2::before{background:radial-gradient(circle at 35% 30%,#DC7070,#882828);
+  box-shadow:2px 3px 0 rgba(0,0,0,.85),0 0 7px var(--p2g)}
+
+/* SPRITES */
+.cell .sp{position:absolute;inset:0;z-index:3;display:flex;align-items:center;
+  justify-content:center;font-size:calc(var(--cs)*.72);pointer-events:none;
+  filter:drop-shadow(1px 3px 0 rgba(0,0,0,.9))}
+/* when image is available */
+.cell .sp img{width:90%;height:90%;object-fit:contain;image-rendering:pixelated}
+
+/* HP BAR on piece */
+.cell .hpb{position:absolute;bottom:1px;left:10%;right:10%;height:2px;
+  background:rgba(0,0,0,.5);border-radius:1px;z-index:6}
+.cell .hpf{height:100%;border-radius:1px;background:#4aaa6a;transition:width .3s}
+.cell .hpf.med{background:#c06060}
+
+/* STATUS badges */
+.cell .sbdg{position:absolute;top:1px;right:1px;font-size:7px;z-index:7;line-height:1}
+
+/* ACTION BAR */
+#abar{width:100%;display:flex;gap:6px;padding:4px 10px;flex-shrink:0}
+
+/* HAND */
+#hand-area{width:100%;flex-shrink:0;padding:0 8px 8px}
+.hand-lbl{font-size:8px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--text-d);margin-bottom:4px}
+#hand{display:flex;gap:5px;overflow-x:auto;padding-bottom:2px;
+  scrollbar-width:none;-webkit-overflow-scrolling:touch}
+#hand::-webkit-scrollbar{display:none}
+
+/* ══ CARD ════════════════════════════════ */
+.card{flex-shrink:0;width:76px;border-radius:8px;border:1px solid var(--line);
+  background:var(--bg-m);display:flex;flex-direction:column;cursor:pointer;
+  transition:transform .16s,border-color .16s,box-shadow .16s;
+  position:relative;overflow:hidden;-webkit-tap-highlight-color:transparent}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  border-radius:8px 8px 0 0;transition:background .16s}
+.card.med::before{background:var(--blood)}
+.card.sam::before{background:var(--p1c)}
+.card.act{border-color:var(--gold);transform:translateY(-7px);
+  box-shadow:0 8px 22px rgba(201,164,73,.22);z-index:2}
+.card.act::before{background:var(--gold) !important}
+.card:active{transform:translateY(-3px)}
+
+/* card head */
+.ch{padding:6px 6px 3px;position:relative}
+.cn{font-size:8px;font-weight:600;color:var(--text);line-height:1.2;
+  margin-right:17px;min-height:20px}
+.cc{position:absolute;top:4px;right:4px;width:16px;height:16px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:8px;font-weight:700;color:var(--bg)}
+.cc.comum{background:#8a9aaa}.cc.ustar{background:#5a90d4}.cc.uprisma{background:var(--gold)}
+.cc.inicio{background:#4aaa6a;font-size:6px}
+
+/* card art */
+.ca{margin:0 6px 3px;height:40px;border-radius:4px;background:var(--bg-l);
+  display:flex;align-items:center;justify-content:center;font-size:20px;
+  position:relative;overflow:hidden}
+.ca img{width:100%;height:100%;object-fit:cover;border-radius:4px}
+.ca-badge{position:absolute;bottom:2px;right:3px;font-size:6px;font-weight:600;
+  letter-spacing:.06em;text-transform:uppercase;padding:1px 3px;border-radius:2px}
+.ca-badge.med{background:rgba(139,58,58,.35);color:#D4907A}
+.ca-badge.sam{background:rgba(74,141,184,.35);color:#90C0E0}
+
+/* card stats */
+.cs-row{display:grid;grid-template-columns:1fr 1fr;gap:1px;padding:0 5px 3px}
+.cs{font-size:7px;color:var(--text-d);display:flex;align-items:center;gap:2px}
+.cs b{color:var(--text-m);font-weight:500}
+
+/* card abilities */
+.cabs{border-top:1px solid var(--line);padding:3px 5px 4px;
+  display:flex;flex-direction:column;gap:2px}
+.cab{font-size:6.5px;line-height:1.35;color:var(--text-d)}
+.cab .cl{font-weight:600;display:block;margin-bottom:1px}
+.cab.pasiva .cl{color:#4aaa6a}.cab.activa .cl{color:var(--p1c)}.cab.activa2 .cl{color:#A070D0}
+
+/* ══ INSPECTOR PANEL ═════════════════════ */
+#inspector{position:fixed;inset:0;z-index:200;background:rgba(5,6,8,.92);
+  display:none;align-items:flex-end;justify-content:center;padding:0}
+#inspector.on{display:flex}
+#insp-card{width:100%;max-width:480px;background:var(--bg-d);
+  border-radius:16px 16px 0 0;border-top:1px solid var(--line2);
+  padding:16px;max-height:85dvh;overflow-y:auto;scrollbar-width:none}
+#insp-card::-webkit-scrollbar{display:none}
+.insp-close{float:right;background:none;border:none;color:var(--text-d);
+  font-size:18px;cursor:pointer;margin-top:-4px}
+.insp-name{font-family:'Cinzel',serif;font-size:16px;font-weight:700;
+  color:var(--text);margin-bottom:2px}
+.insp-sub{font-size:10px;color:var(--text-d);letter-spacing:.08em;margin-bottom:10px}
+.insp-art{width:100%;height:120px;border-radius:8px;background:var(--bg-l);
+  display:flex;align-items:center;justify-content:center;font-size:48px;
+  margin-bottom:12px;overflow:hidden}
+.insp-art img{width:100%;height:100%;object-fit:cover;border-radius:8px}
+.insp-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px}
+.is{background:var(--bg-m);border-radius:5px;padding:6px 8px;text-align:center}
+.is-lbl{font-size:8px;color:var(--text-d);letter-spacing:.1em;text-transform:uppercase}
+.is-val{font-size:15px;font-weight:600;color:var(--text);font-family:'JetBrains Mono',monospace}
+.insp-abil{margin-bottom:8px}
+.ia-lbl{font-size:9px;letter-spacing:.12em;text-transform:uppercase;
+  margin-bottom:4px;font-weight:600}
+.ia-lbl.pas{color:#4aaa6a}.ia-lbl.act{color:var(--p1c)}.ia-lbl.act2{color:#A070D0}
+.ia-txt{font-size:12px;color:var(--text-m);line-height:1.5}
+.insp-flv{font-size:11px;color:var(--text-d);font-style:italic;
+  border-top:1px solid var(--line);padding-top:8px;line-height:1.5}
+.rareza-badge{display:inline-block;padding:3px 10px;border-radius:20px;
+  font-size:9px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px}
+.rb-comum{background:rgba(138,154,170,.15);color:#8a9aaa;border:1px solid rgba(138,154,170,.3)}
+.rb-ustar{background:rgba(90,144,212,.15);color:#7aAAF0;border:1px solid rgba(90,144,212,.3)}
+.rb-uprisma{background:rgba(201,164,73,.15);color:var(--gold);border:1px solid rgba(201,164,73,.3)}
+
+/* ══ PLAYER STRIPS ═══════════════════════ */
+.pstrip{width:100%;background:var(--bg-m);border:1px solid var(--line);
+  border-radius:8px;padding:6px 10px;display:flex;align-items:center;gap:8px;flex-shrink:0;
+  margin:0 0 0}
+.pstrip.p1{border-color:rgba(74,141,184,.3)}
+.pstrip.p2{border-color:rgba(184,90,90,.3)}
+.pav{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:13px;flex-shrink:0}
+.pav.p1{background:rgba(74,141,184,.2);border:1px solid rgba(74,141,184,.5)}
+.pav.p2{background:rgba(184,90,90,.2);border:1px solid rgba(184,90,90,.5)}
+.pinfo{flex:1;min-width:0}
+.pname{font-size:10px;font-weight:600;color:var(--text)}
+.phpbar{width:100%;height:3px;background:var(--line);border-radius:2px;margin-top:3px;overflow:hidden}
+.phpfill{height:100%;border-radius:2px;transition:width .4s}
+.phpfill.p1{background:linear-gradient(90deg,#1A4A7A,#3A8ACA)}
+.phpfill.p2{background:linear-gradient(90deg,#7A2020,#C04040)}
+.pstats{display:flex;gap:7px;margin-top:2px}
+.ps{font-size:8px;color:var(--text-d)}.ps b{color:var(--text-m)}
+
+/* ══ HANDOVER MODAL ══════════════════════ */
+#handover{position:fixed;inset:0;z-index:250;background:rgba(5,6,8,.96);
+  display:none;align-items:center;justify-content:center;padding:20px}
+#handover.on{display:flex}
+.ho-box{background:var(--bg-d);border:1px solid var(--line2);border-radius:12px;
+  padding:24px;text-align:center;max-width:340px;width:100%}
+.ho-title{font-family:'Cinzel',serif;font-size:18px;color:var(--gold);margin-bottom:8px}
+.ho-sub{font-size:12px;color:var(--text-m);margin-bottom:20px;line-height:1.5}
+
+/* ══ LOADER ══════════════════════════════ */
+.spin{display:inline-block;width:14px;height:14px;border-radius:50%;
+  border:2px solid var(--line);border-top-color:var(--copper);
+  animation:sp .7s linear infinite;vertical-align:middle}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* ══ PROGRESS BAR ════════════════════════ */
+.prog-wrap{width:100%;background:var(--bg-m);border-radius:3px;overflow:hidden;height:3px}
+.prog-fill{height:100%;background:var(--gold);transition:width .4s ease}
+</style>
+</head>
+<body>
+<div id="bg-grid"></div>
+<div id="bg-vig"></div>
+<div id="toast"></div>
+
+<!-- ══════════════════════════════════════
+     S1: HOME
+══════════════════════════════════════════ -->
+<div class="screen on" id="s-home">
+  <div class="logo">
+    <span class="logo-s">STAR CITY</span>
+    <span class="logo-c">Legends of the Board</span>
+    <span class="logo-v">v1.0 · alpha</span>
+  </div>
+
+  <div class="sbox">
+    <div class="sdot wait" id="dot-home"></div>
+    <div class="stxt" id="txt-home">Conectando con la base de datos… <span class="spin"></span></div>
+  </div>
+
+  <button class="btn primary" id="btn-nueva" onclick="go('s-nueva')" disabled>⚔ Nueva Partida</button>
+  <button class="btn jade" onclick="go('s-unirse')">🔗 Unirse con Código</button>
+  <div class="div">modo local</div>
+  <button class="btn ghost" onclick="startLocal()">Sandbox sin red</button>
+</div>
+
+<!-- ══════════════════════════════════════
+     S2: NUEVA PARTIDA
+══════════════════════════════════════════ -->
+<div class="screen" id="s-nueva">
+  <button class="back" onclick="go('s-home')">← Volver</button>
+  <div class="logo"><span class="logo-c" style="font-size:11px;letter-spacing:.28em">Nueva Partida</span></div>
+
+  <div class="field">
+    <label>Tu nombre</label>
+    <input id="inp-n1" type="text" placeholder="Capitán…" maxlength="20">
+  </div>
+  <div class="div">elige tu mazo</div>
+  <div class="dgrid" id="dg-nueva"></div>
+  <button class="btn primary" onclick="crearPartida()">Crear Partida →</button>
+</div>
+
+<!-- ══════════════════════════════════════
+     S3: SALA DE ESPERA
+══════════════════════════════════════════ -->
+<div class="screen" id="s-espera">
+  <div class="logo"><span class="logo-c" style="font-size:10px;letter-spacing:.25em">Sala de Espera</span></div>
+
+  <div class="cbox">
+    <div class="cbox-lbl">Comparte este código con tu rival</div>
+    <div class="cbox-val" id="cod-disp">——</div>
+    <div class="cbox-sub">El código caduca cuando inicia la partida</div>
+  </div>
+
+  <div class="sbox">
+    <div class="sdot wait"></div>
+    <div class="stxt">Esperando que <b>J2</b> se una… <span class="spin"></span></div>
+  </div>
+
+  <button class="btn ghost" onclick="copiarCod()">Copiar código</button>
+  <button class="btn ghost" onclick="go('s-home')">Cancelar</button>
+</div>
+
+<!-- ══════════════════════════════════════
+     S4: UNIRSE
+══════════════════════════════════════════ -->
+<div class="screen" id="s-unirse">
+  <button class="back" onclick="go('s-home')">← Volver</button>
+  <div class="logo"><span class="logo-c" style="font-size:11px;letter-spacing:.28em">Unirse</span></div>
+
+  <div class="field">
+    <label>Tu nombre</label>
+    <input id="inp-n2" type="text" placeholder="General…" maxlength="20">
+  </div>
+  <div class="field">
+    <label>Código de partida</label>
+    <input id="inp-cod" type="text" placeholder="ABC123" maxlength="6"
+      style="text-transform:uppercase;letter-spacing:.3em;font-size:20px;text-align:center"
+      oninput="this.value=this.value.toUpperCase()">
+  </div>
+  <div class="div">elige tu mazo</div>
+  <div class="dgrid" id="dg-unirse"></div>
+  <button class="btn jade" onclick="unirsePartida()">Unirse →</button>
+</div>
+
+<!-- ══════════════════════════════════════
+     S5: CARGANDO
+══════════════════════════════════════════ -->
+<div class="screen" id="s-load">
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;width:100%">
+    <span class="logo-s" style="font-size:28px">STAR CITY</span>
+    <div class="sbox"><div class="sdot wait"></div><div class="stxt" id="txt-load">Preparando el tablero…</div></div>
+    <div class="prog-wrap" style="margin-top:4px"><div class="prog-fill" id="prog" style="width:0%"></div></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     S6: JUEGO
+══════════════════════════════════════════ -->
+<div class="screen" id="s-game">
+  <!-- Rival (arriba) -->
+  <div class="pstrip p2" id="strip-rival" style="margin:6px 10px 0;width:calc(100% - 20px)">
+    <div class="pav p2">👤</div>
+    <div class="pinfo">
+      <div class="pname" id="rival-name">Oponente</div>
+      <div class="phpbar"><div class="phpfill p2" id="rival-hp" style="width:100%"></div></div>
+      <div class="pstats">
+        <div class="ps">❤️ <b id="rival-hp-val">135</b></div>
+        <div class="ps">🃏 <b id="rival-cards">—</b></div>
+        <div class="ps">💠 <b id="rival-pa">—</b></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HUD -->
+  <div id="hud">
+    <div class="hud-title">STAR CITY</div>
+    <div class="hpills">
+      <div class="pill tur">Turno <b id="turn-n">1</b></div>
+      <div class="pill pts">PA <b id="pa-n">—</b></div>
+      <div class="pill">D4 <b id="d4-n">—</b></div>
+    </div>
+  </div>
+
+  <!-- LOG -->
+  <div id="log">Toca una casilla para seleccionar · Toca una carta para desplegar.</div>
+
+  <!-- TABLERO 2.5D -->
+  <div id="board-vp">
+    <div class="iso-stage">
+      <div id="board"></div>
+    </div>
+  </div>
+
+  <!-- LEYENDA overlays -->
+  <div style="display:flex;gap:5px;padding:2px 10px;flex-shrink:0">
+    <span style="font-size:8px;color:var(--text-d);display:flex;align-items:center;gap:3px">
+      <span style="width:7px;height:7px;border-radius:50%;background:rgba(40,200,100,.7);display:inline-block"></span>Invocar
+    </span>
+    <span style="font-size:8px;color:var(--text-d);display:flex;align-items:center;gap:3px">
+      <span style="width:7px;height:7px;border-radius:50%;background:rgba(30,130,255,.7);display:inline-block"></span>Mover
+    </span>
+    <span style="font-size:8px;color:var(--text-d);display:flex;align-items:center;gap:3px">
+      <span style="width:7px;height:7px;border-radius:50%;background:rgba(220,50,60,.7);display:inline-block"></span>Atacar
+    </span>
+  </div>
+
+  <!-- BOTONES -->
+  <div id="abar">
+    <button class="btn ghost" style="flex:1;font-size:9px" onclick="pasarTurno()">Pasar</button>
+    <button class="btn primary" style="flex:2" onclick="siguienteTurno()" id="btn-next">▶ Turno 1</button>
+    <button class="btn ghost" style="flex:1;font-size:9px" onclick="colocarCarta()">Colocar</button>
+  </div>
+
+  <!-- JUGADOR (abajo) -->
+  <div class="pstrip p1" id="strip-yo" style="margin:0 10px 4px;width:calc(100% - 20px)">
+    <div class="pav p1">⚔️</div>
+    <div class="pinfo">
+      <div class="pname" id="yo-name">Tú</div>
+      <div class="phpbar"><div class="phpfill p1" id="yo-hp" style="width:100%"></div></div>
+      <div class="pstats">
+        <div class="ps">❤️ <b id="yo-hp-val">135</b></div>
+        <div class="ps">🃏 <b id="yo-cards">—</b></div>
+        <div class="ps">💠 <b id="yo-pa">—</b></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MANO -->
+  <div id="hand-area">
+    <div class="hand-lbl">Tu mano</div>
+    <div id="hand"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     INSPECTOR (bottom sheet)
+══════════════════════════════════════════ -->
+<div id="inspector" onclick="closeInspector(event)">
+  <div id="insp-card">
+    <button class="insp-close" onclick="closeInspector()">✕</button>
+    <div id="insp-content"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     HANDOVER MODAL
+══════════════════════════════════════════ -->
+<div id="handover">
+  <div class="ho-box">
+    <div class="ho-title" id="ho-title">Pasa el dispositivo</div>
+    <div class="ho-sub" id="ho-sub">Es el turno del otro jugador</div>
+    <button class="btn primary" onclick="closeHandover()">Listo →</button>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════
+   CONFIG
+══════════════════════════════════════════ */
+const API = 'https://script.google.com/macros/s/AKfycbwEQplpq6Eq3GbAvlrxzARGzbi4jvf2NY2G5INwNtN4cIgirVIkszTqpcy1EPDo6vSt/exec';
+
+/* ══ MAZOS ════════════════════════════════ */
+const DECKS = [
+  {key:'SECRETOS REALES',    name:'Secretos Reales',    arq:'Medieval',cls:'med',icon:'👑',
+   desc:'Tutores y reyes. Decreto Real, generales con equipo y Sombra del Trono.'},
+  {key:'ASEDIO DEL REINO',   name:'Asedio del Reino',   arq:'Medieval',cls:'med',icon:'🏰',
+   desc:'Cañón Ligero, Puestos de Avanzada y Guardia Real para empujar al frente.'},
+  {key:'FILO DE MEDIANOCHE', name:'Filo de Medianoche', arq:'Samurái', cls:'sam',icon:'🗡️',
+   desc:'Ronin, Wakizashi y Clan Rojo abren paso. Kenzo y Rakegake como generales.'},
+  {key:'TORMENTA DEL TRUENO',name:'Tormenta del Trueno',arq:'Samurái', cls:'sam',icon:'⚡',
+   desc:'Raikiri Oni prepara el terreno para Rashomon Dios del Trueno.'},
+];
+
+/* Mazos hardcodeados (igual que StarCity original) */
+const DECK_MAP = {
+  'SECRETOS REALES':    ['Rey','Centinela de Plata','Sombra del Trono','Tropa del Rey','Tropa del Rey','Tropa del Rey','Jinete de la Corona','Jinete de la Corona','Heredero de la Corona','Torre Oscura','Puesto de Avanzada','Muralla Fortificada','Decreto Real','Decreto Real','Manto Real','Manto Real','Excalibur','Espada Real','Corona del Rey','Anillo del Rey','Armadura de Combate','Medallon Encantado','Maíz','Maíz','Maíz','Maíz','Maíz','Maíz','Maíz','Maíz','Maíz'],
+  'ASEDIO DEL REINO':   ['Centinela de Plata','Rey','Cañón de Asedio Ligero','Tropa del Rey','Tropa del Rey','Vigía de la Corona','Vigía de la Corona','Guardia Real','Guardia Real','Puesto de Avanzada','Puesto de Avanzada','Muralla Fortificada','Ración de Combate','Ración de Combate','Ración de Combate','Espada Real','Hacha de Fuego y Acero','Estandarte de Guerra','Medallon Encantado','Anillo del Rey','Escudo Anti-Magia','Poción de Flor Azul','Maíz','Maíz','Maíz','Maíz','Maíz','Maíz','Maíz','Maíz','Maíz'],
+  'FILO DE MEDIANOCHE': ['Kenzo Hoja Espectral','Rakegake El Relámpago Rojo','Rashomon Dios Del Trueno','Ronin','Ronin','Wakizashi','Wakizashi','Towamari Ola Danzante','Samurái del Clan Rojo','Pequeño Templo','Pequeño Templo','Puesto de Avanzada','Flechas','Flechas','Flechas','Raikiri','Raikiri','Katana Relámpago','Anillo Brillante','Día de Lluvia','Fogata de Combate','Día de Lluvia','Campos de Arroz','Campos de Arroz','Campos de Arroz','Campos de Arroz','Campos de Arroz','Campos de Arroz','Campos de Arroz','Campos de Arroz','Campos de Arroz'],
+  'TORMENTA DEL TRUENO':['Raikiri Oni','Rakegake El Relámpago Rojo','Rashomon Dios Del Trueno','Towamari Ola Danzante','Tsuki Onna','Tsuki Onna','Ronin','Ronin','Wakizashi','Pequeño Templo','Pequeño Templo','Torre Oscura','Día de Lluvia','Día de Lluvia','Raikiri','Raikiri','Raikiri','Flechas','Flechas','Flechas','Neblina Neón','Fogata de Combate','Campos de Arroz','Campos de Arroz','Campos de Arroz','Campos de Arroz','Campos de Arroz','Campos de Arroz','Campos de Arroz','Campos de Arroz','Campos de Arroz'],
+};
+
+/* ══ ESTADO ════════════════════════════════ */
+const APP = {
+  cartas:{},          // mapa nombre→carta del Sheets
+  id:null,            // ID partida
+  jugador:null,       // 'p1'|'p2'
+  mazo:null,          // key del mazo elegido
+  nombre:null,
+  deckNueva:null,
+  deckUnirse:null,
+  pollT:null,
+  local:false,        // modo sin red
+};
+
+const GS = {          // Game State
+  turno:1,
+  activo:'p1',
+  fase:'Recaudacion',
+  paMax:{ p1:9, p2:9 },
+  paCurrent:{ p1:0, p2:0 },
+  piezas:{},          // id→pieza
+  cells:{},           // "r-c"→{pieza:id|null}
+  mano:{ p1:[], p2:[] },
+  mazo:{ p1:[], p2:[] },
+  castillo:{ p1:{hp:135,maxHp:135}, p2:{hp:135,maxHp:135} },
+  turn:0,
+  lastD4:0,
+  arroz:{ p1:0, p2:0 },
+};
+
+let _selCard    = null;   // carta seleccionada en mano
+let _selCell    = null;   // casilla seleccionada
+let _pieceCount = 0;
+
+/* ══ BOOT ══════════════════════════════════ */
+window.addEventListener('DOMContentLoaded', () => {
+  renderDeckGrids();
+  cargarCartas();
+});
+
+async function cargarCartas() {
+  try {
+    const data = await apiGet('cartas');
+    const cartas = (data || []).filter(c => c.Nombre);
+    cartas.forEach(c => { APP.cartas[c.Nombre] = c; });
+    setStatus('dot-home','txt-home','ok', `✓ Base de datos lista · ${cartas.length} cartas cargadas`);
+    document.getElementById('btn-nueva').disabled = false;
+  } catch(e) {
+    setStatus('dot-home','txt-home','err','⚠ Sin conexión · modo offline disponible');
+    document.getElementById('btn-nueva').disabled = false;
+  }
+}
+
+/* ══ API ════════════════════════════════════ */
+async function apiGet(action, params={}) {
+  const qs  = new URLSearchParams({ action, ...params });
+  const res = await fetch(`${API}?${qs}`, { redirect:'follow' });
+  const txt = await res.text();
+  try { const j = JSON.parse(txt); if (!j.ok) throw new Error(j.error); return j.data; }
+  catch(e) { throw new Error('API: ' + txt.slice(0,80)); }
+}
+
+/* ══ NAV ════════════════════════════════════ */
+function go(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+}
+
+/* ══ DECK GRIDS ═════════════════════════════ */
+function renderDeckGrids() {
+  ['nueva','unirse'].forEach(m => {
+    document.getElementById(`dg-${m}`).innerHTML = DECKS.map((d,i) => `
+      <div class="dk ${d.cls}" id="dk-${m}-${i}" onclick="selDeck('${m}',${i},'${d.key}')">
+        <div class="dk-name">${d.icon} ${d.name}</div>
+        <div class="dk-arq ${d.cls}">${d.arq}</div>
+        <div class="dk-desc">${d.desc}</div>
+        <div class="dk-chk">✦</div>
+      </div>`).join('');
+  });
+}
+function selDeck(m, i, key) {
+  document.querySelectorAll(`#dg-${m} .dk`).forEach(d => d.classList.remove('sel'));
+  document.getElementById(`dk-${m}-${i}`).classList.add('sel');
+  if (m === 'nueva') APP.deckNueva = key; else APP.deckUnirse = key;
+}
+
+/* ══ CREAR PARTIDA ══════════════════════════ */
+async function crearPartida() {
+  const nombre = document.getElementById('inp-n1').value.trim() || 'Jugador 1';
+  if (!APP.deckNueva) { toast('Elige un mazo primero','err'); return; }
+  APP.id = genCod(); APP.jugador = 'p1'; APP.mazo = APP.deckNueva; APP.nombre = nombre;
+  document.getElementById('cod-disp').textContent = APP.id;
+  go('s-espera');
+  try {
+    await apiGet('nueva_partida',{ id:APP.id, mazo_j1:APP.mazo, jugador_j1:nombre });
+    toast(`Partida ${APP.id} creada ✓`,'ok');
+  } catch(e) { toast('Solo local: ' + e.message,'err'); }
+  iniciarPoll();
+}
+
+/* ══ UNIRSE ═════════════════════════════════ */
+async function unirsePartida() {
+  const nombre = document.getElementById('inp-n2').value.trim() || 'Jugador 2';
+  const cod    = document.getElementById('inp-cod').value.trim().toUpperCase();
+  if (cod.length !== 6) { toast('El código debe tener 6 caracteres','err'); return; }
+  if (!APP.deckUnirse)  { toast('Elige un mazo primero','err'); return; }
+  APP.id = cod; APP.jugador = 'p2'; APP.mazo = APP.deckUnirse; APP.nombre = nombre;
+  try {
+    await apiGet('unirse',{ id:cod, mazo_j2:APP.mazo, jugador_j2:nombre });
+    toast(`¡Unido a ${cod}! ✓`,'ok');
+    iniciarJuego('p2');
+  } catch(e) { toast('Error: ' + e.message,'err'); }
+}
+
+/* ══ POLLING LOBBY ══════════════════════════ */
+function iniciarPoll() {
+  stopPoll();
+  APP.pollT = setInterval(async () => {
+    try {
+      const d = await apiGet('lobby',{ id: APP.id });
+      if (!d) return;
+      if (d.Estado === 'en_curso') {
+        stopPoll();
+        toast('¡Tu rival se unió!','ok');
+        setTimeout(() => iniciarJuego('p1'), 800);
+      }
+    } catch(e) {}
+  }, 9000);
+}
+function stopPoll() { if (APP.pollT) { clearInterval(APP.pollT); APP.pollT = null; } }
+
+/* ══ MODO LOCAL ═════════════════════════════ */
+function startLocal() {
+  APP.id = 'LOCAL'; APP.jugador = 'p1'; APP.local = true;
+  APP.mazo = 'SECRETOS REALES'; APP.nombre = 'Jugador 1';
+  iniciarJuego('p1');
+}
+
+/* ══ INICIAR JUEGO ══════════════════════════ */
+async function iniciarJuego(rol) {
+  go('s-load'); setProg(10,'Preparando tablero…');
+  await sleep(200); setProg(35,'Armando mazos…');
+
+  // init mazos
+  const castilloArq = DECKS.find(d => d.key === APP.mazo)?.arq || 'Medieval';
+  const castilloCarta = APP.cartas[`Castillo del Rey`] || makeFallbackCastle(castilloArq);
+
+  initMazo('p1', APP.mazo);
+  initMazo('p2', APP.mazo); // en modo local ambos usan el mismo mazo
+
+  await sleep(200); setProg(65,'Repartiendo mano inicial…');
+  drawInitialHand('p1', castilloCarta);
+
+  await sleep(200); setProg(90,'Colocando castillos…');
+  buildBoard();
+  placeCastle('p1', castilloCarta);
+
+  await sleep(300); setProg(100,'¡Que comience la batalla!');
+  await sleep(400);
+
+  // nombres
+  document.getElementById('yo-name').textContent    = APP.nombre || 'Tú';
+  document.getElementById('rival-name').textContent = 'Oponente';
+
+  go('s-game');
+  startPlayerTurn('p1');
+}
+
+/* ══ MAZO E INIT ════════════════════════════ */
+function initMazo(player, deckKey) {
+  const names = DECK_MAP[deckKey] || [];
+  GS.mazo[player] = shuffle(names.map(n => {
+    const c = APP.cartas[n];
+    if (c) return hydrateCard(c);
+    return makeFallbackCard(n);
+  }));
+  GS.cells = {};
+  for (let r = 0; r < 15; r++) for (let c = 0; c < 15; c++) GS.cells[`${r}-${c}`] = null;
+}
+
+function hydrateCard(c) {
+  return {
+    id:      c.ID_Carta,
+    name:    c.Nombre,
+    type:    c.Tipo,
+    subtype: c.Subtipo || '',
+    rarity:  c.Rareza || 'Común',
+    arq:     c.Arquetipo || 'Medieval',
+    cost:    isNaN(parseInt(c.Coste)) ? 0 : parseInt(c.Coste),
+    hp:      parseInt(c.Defensa_HP)   || 0,
+    def:     parseInt(c.Ataque)       || 0,
+    vis:     parseInt(c.Rango_Ataque) || 2,
+    movC:    c.Movimiento ? parseInt(c.Movimiento.split(':')[0]) : 0,
+    movR:    c.Movimiento ? parseInt(c.Movimiento.split(':')[1]) : 0,
+    paT:     parseInt(c.PA_Activar)   || 0,
+    color:   c.Color_Tema             || 'rojo',
+    sprite:  c.Sprite_Tablero_2D      || '🃏',
+    imgMano: c.Imagen_Mano            || null,
+    imgTab:  c.Imagen_Tablero         || null,
+    pasN:    c.Pasiva_Nombre          || '',
+    pasE:    c.Pasiva_Efecto          || '',
+    h1N:     c.Activa_1_Nombre        || '',
+    h1C:     parseInt(c.Activa_1_Coste_PA) || 0,
+    h1E:     c.Activa_1_Efecto        || '',
+    h2N:     c.Activa_2_Nombre        || '',
+    h2C:     parseInt(c.Activa_2_Coste_PA) || 0,
+    h2E:     c.Activa_2_Efecto        || '',
+    flv:     c.Texto_Ambientacion     || '',
+    slots:   (c.Ranura_Objeto_1?1:0) + (c.Ranura_Objeto_2?1:0),
+    maxCopies: parseInt(c.Cantidad_Max) || 1,
+    isHarvest: (c.Subtipo||'').includes('Cosecha'),
+  };
+}
+
+function makeFallbackCard(name) {
+  return { id:'?', name, type:'Unidad', subtype:'', rarity:'Común', arq:'Medieval',
+    cost:5, hp:15, def:0, vis:2, movC:1, movR:1, paT:0, color:'rojo',
+    sprite:'🃏', imgMano:null, imgTab:null, pasN:'', pasE:'', h1N:'', h1C:0,
+    h1E:'', h2N:'', h2C:0, h2E:'', flv:'', slots:1, maxCopies:3, isHarvest:false };
+}
+function makeFallbackCastle(arq) {
+  return { id:'EST_001', name:'Castillo del Rey', type:'Estructura Principal',
+    subtype:'', rarity:'Ultra Prisma', arq, cost:0, hp:135, def:0, vis:2,
+    movC:0, movR:0, paT:3, color: arq==='Samurái'?'azul':'rojo',
+    sprite:'🏰_castillo', imgMano:null, imgTab:null,
+    pasN:'Espíritu de Combate', pasE:'Tus unidades tienen +5 HP máximo.',
+    h1N:'Aura del Rey', h1C:3, h1E:'Unidades en tu zona ganan +2 daño y +1 defensa.',
+    h2N:'Maniobras Defensivas', h2C:3, h2E:'3 daño a unidades enemigas en radio 2.',
+    flv:'El corazón y el alma del reino.', slots:0, maxCopies:1, isHarvest:false };
+}
+
+function drawInitialHand(player, castle) {
+  GS.mano[player] = [castle];
+  for (let i = 0; i < 4; i++) {
+    const c = GS.mazo[player].shift();
+    if (c) GS.mano[player].push(c);
+  }
+}
+
+/* ══ BOARD BUILD ════════════════════════════ */
+function buildBoard() {
+  const b = document.getElementById('board');
+  b.innerHTML = '';
+  for (let i = 0; i < 225; i++) {
+    const r = Math.floor(i / 15), c = i % 15;
+    const cell = document.createElement('div');
+    cell.className = `cell ${r < 5 ? 'ze' : r < 10 ? 'zc' : 'zy'}`;
+    cell.dataset.r = r; cell.dataset.c = c;
+    const ov = document.createElement('div'); ov.className = 'ov'; cell.appendChild(ov);
+    cell.addEventListener('click', () => onCellClick(r, c, cell));
+    cell.addEventListener('touchstart', () => {}, { passive: true }); // iOS tap fix
+    b.appendChild(cell);
+  }
+}
+
+function placeCastle(player, card) {
+  const r = player === 'p1' ? 13 : 1;
+  const c = 7;
+  const key = `${r}-${c}`;
+  const pid = `piece-${++_pieceCount}`;
+  GS.cells[key] = pid;
+  GS.piezas[pid] = {
+    id: pid, card, owner: player,
+    hp: card.hp, maxHp: card.hp,
+    r, c, states: [], equip: [],
+    isStructurePrincipal: true,
+  };
+  renderPiece(pid);
+}
+
+/* ══ TURNO ══════════════════════════════════ */
+function startPlayerTurn(player) {
+  GS.activo   = player;
+  GS.fase     = 'Recaudacion';
+  GS.turn++;
+
+  const d4      = Math.floor(Math.random() * 4) + 1;
+  GS.lastD4     = d4;
+  const arroz   = countArroz(player);
+  const paNew   = d4 + 3 + arroz;
+  GS.paCurrent[player] = paNew;
+  GS.arroz[player]     = arroz;
+
+  // roba carta
+  const drawn = GS.mazo[player].shift();
+  if (drawn) {
+    GS.mano[player].push(drawn);
+    setLog(`Turno <em>${GS.turn}</em> · 🎲 D4 = <em>${d4}</em> + 3 castillo + ${arroz} cosecha = <em>${paNew} PA</em> · Robaste <strong>${drawn.name}</strong>`);
+  } else {
+    setLog(`Turno <em>${GS.turn}</em> · 🎲 D4 = <em>${d4}</em> = <em>${paNew} PA</em> · Mazo agotado`);
+  }
+
+  updateHUD();
+  renderHand();
+  renderBoard();
+  clearOverlays();
+}
+
+function siguienteTurno() {
+  if (APP.local) {
+    // modo local: pasa al oponente y luego vuelve
+    startPlayerTurn('p1');
+    return;
+  }
+  // online: guarda y espera
+  guardarTurnoOnline();
+}
+
+async function guardarTurnoOnline() {
+  const siguiente = GS.activo === 'p1' ? 'p2' : 'p1';
+  try {
+    await apiGet('guardar_turno', {
+      id:           APP.id,
+      campo_vision: 3 + Math.floor(GS.turn / 4),
+      turno:        GS.turn,
+      jugador:      GS.activo,
+      d4:           GS.lastD4,
+      castillo:     3,
+      arroz:        GS.arroz[GS.activo],
+      puntos:       GS.paCurrent[GS.activo],
+      tablero:      JSON.stringify(serializeTablero()),
+      fase:         GS.fase,
+      activo:       siguiente,
+    });
+    toast('Turno guardado · Esperando rival…','ok');
+    iniciarPollTurno();
+  } catch(e) {
+    toast('Error guardando: ' + e.message,'err');
+  }
+}
+
+function iniciarPollTurno() {
+  stopPoll();
+  APP.pollT = setInterval(async () => {
+    try {
+      const d = await apiGet('partida',{ id: APP.id });
+      if (!d) return;
+      const activo = d.ID_Jugador_Activo;
+      if (activo === APP.jugador && parseInt(d.Turno_Numero) > GS.turn) {
+        stopPoll();
+        // aplica estado remoto
+        if (d.Estado_Tablero) aplicarTableroRemoto(JSON.parse(d.Estado_Tablero));
+        startPlayerTurn(APP.jugador);
+      }
+    } catch(e) {}
+  }, 9000);
+}
+
+function pasarTurno() {
+  GS.paCurrent[GS.activo] = 0;
+  updateHUD();
+  setLog('Turno pasado · Esperando siguiente acción…');
+}
+
+/* ══ COLOCAR CARTA ══════════════════════════ */
+function colocarCarta() {
+  if (!_selCard) { setLog('Selecciona una carta de tu mano primero.'); return; }
+  if (!_selCell) { setLog('Selecciona una casilla del tablero.'); return; }
+  const { r, c } = _selCell;
+  const key = `${r}-${c}`;
+  if (GS.cells[key]) { setLog('Casilla ocupada.'); return; }
+  if (!isDeployZone(r, GS.activo)) { setLog('Solo puedes colocar en tu zona (filas 10-14).'); return; }
+  const coste = _selCard.cost || 0;
+  if (GS.paCurrent[GS.activo] < coste) {
+    setLog(`PA insuficientes · Necesitas <em>${coste}</em>, tienes <em>${GS.paCurrent[GS.activo]}</em>.`); return;
+  }
+  // crear pieza
+  const pid = `piece-${++_pieceCount}`;
+  GS.cells[key] = pid;
+  GS.piezas[pid] = {
+    id: pid, card: _selCard, owner: GS.activo,
+    hp: _selCard.hp, maxHp: _selCard.hp,
+    r, c, states: [], equip: [],
+    isStructurePrincipal: _selCard.type === 'Estructura Principal',
+  };
+  GS.paCurrent[GS.activo] -= coste;
+  GS.mano[GS.activo] = GS.mano[GS.activo].filter(x => x !== _selCard);
+  _selCard = null;
+  clearCellSel();
+  renderPiece(pid);
+  renderHand();
+  updateHUD();
+  clearOverlays();
+  setLog(`<strong>${GS.piezas[pid].card.name}</strong> colocado en (${c+1},${r+1}) · Quedan <em>${GS.paCurrent[GS.activo]} PA</em>.`);
+}
+
+/* ══ HELPERS JUEGO ══════════════════════════ */
+function isDeployZone(r, player) {
+  return player === 'p1' ? r >= 10 : r <= 4;
+}
+function countArroz(player) {
+  return Object.values(GS.piezas).filter(p => p.owner === player && p.card.isHarvest).length;
+}
+function serializeTablero() {
+  const t = {};
+  Object.entries(GS.piezas).forEach(([id, p]) => {
+    t[`${p.r}-${p.c}`] = { id, name: p.card.name, owner: p.owner, hp: p.hp,
+      r: p.r, c: p.c, states: p.states };
+  });
+  return t;
+}
+function aplicarTableroRemoto(tablero) {
+  const rival = APP.jugador === 'p1' ? 'p2' : 'p1';
+  Object.entries(tablero).forEach(([key, pd]) => {
+    if (pd.owner !== rival) return;
+    if (!GS.piezas[pd.id]) {
+      const card = APP.cartas[pd.name] ? hydrateCard(APP.cartas[pd.name]) : makeFallbackCard(pd.name);
+      GS.cells[key] = pd.id;
+      GS.piezas[pd.id] = { ...pd, card, maxHp: card.hp };
+    } else {
+      GS.piezas[pd.id].hp = pd.hp;
+    }
+  });
+  renderBoard();
+}
+
+/* ══ RENDER PIEZAS ══════════════════════════ */
+function renderPiece(pid) {
+  const p = GS.piezas[pid];
+  if (!p) return;
+  const cell = getCell(p.r, p.c);
+  if (!cell) return;
+
+  // limpiar clases de pieza anteriores
+  cell.classList.remove('pp1','pp2');
+
+  const sp = document.createElement('div');
+  sp.className = 'sp';
+  sp.dataset.pid = pid;
+
+  // imagen real si existe, emoji si no
+  const spriteStr = p.card.sprite || '';
+  const emoji = spriteStr.split('_')[0];
+  if (p.card.imgTab) {
+    const img = document.createElement('img');
+    img.src = p.card.imgTab;
+    img.alt = p.card.name;
+    sp.appendChild(img);
+  } else {
+    sp.textContent = emoji || '🃏';
+  }
+
+  // HP bar
+  const hpb = document.createElement('div'); hpb.className = 'hpb';
+  const hpf = document.createElement('div');
+  hpf.className = `hpf${p.owner === 'p2' ? ' med' : ''}`;
+  hpf.style.width = Math.max(0, Math.round(p.hp / p.maxHp * 100)) + '%';
+  hpb.appendChild(hpf); cell.appendChild(hpb);
+
+  // color de pieza si no es estructura
+  if (p.card.type === 'Unidad') {
+    cell.classList.add(p.owner === 'p1' ? 'pp1' : 'pp2');
+  }
+
+  // quitar sprite viejo y poner nuevo
+  cell.querySelectorAll('.sp').forEach(e => e.remove());
+  cell.appendChild(sp);
+
+  // tap largo → inspector
+  sp.addEventListener('click', (e) => {
+    e.stopPropagation();
+    openInspector(p.card);
+  });
+}
+
+function renderBoard() {
+  Object.values(GS.piezas).forEach(p => renderPiece(p.id));
+}
+
+function getCell(r, c) {
+  return document.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`);
+}
+
+/* ══ CLICK CELDA ════════════════════════════ */
+function onCellClick(r, c, cell) {
+  const key = `${r}-${c}`;
+  const pid = GS.cells[key];
+
+  // Si hay pieza propia → mostrar rango de movimiento
+  if (pid && GS.piezas[pid]?.owner === GS.activo) {
+    clearCellSel();
+    _selCell = { r, c };
+    cell.classList.add('sel');
+    showMoveRange(pid);
+    setLog(`<strong>${GS.piezas[pid].card.name}</strong> · HP: ${GS.piezas[pid].hp} · Toca destino para mover.`);
+    return;
+  }
+
+  // Si hay pieza rival → info
+  if (pid && GS.piezas[pid]?.owner !== GS.activo) {
+    openInspector(GS.piezas[pid].card);
+    return;
+  }
+
+  // Casilla vacía → seleccionar para colocar
+  clearCellSel();
+  _selCell = { r, c };
+  cell.classList.add('sel');
+  if (_selCard) {
+    setLog(`Casilla (${c+1},${r+1}) lista · Pulsa <strong>Colocar</strong>.`);
+  } else {
+    setLog(`Casilla (${c+1},${r+1}) seleccionada · Elige una carta de tu mano.`);
+  }
+}
+
+function clearCellSel() {
+  if (_selCell) {
+    const old = getCell(_selCell.r, _selCell.c);
+    if (old) old.classList.remove('sel');
+    _selCell = null;
+  }
+  clearOverlays();
+}
+
+/* ══ OVERLAYS ═══════════════════════════════ */
+function showMoveRange(pid) {
+  clearOverlays();
+  const p = GS.piezas[pid];
+  if (!p || !p.card.movC) return;
+  const R = p.card.movR || 1;
+  for (let dr = -R; dr <= R; dr++) {
+    for (let dc = -R; dc <= R; dc++) {
+      if (Math.abs(dr) + Math.abs(dc) > R) continue;
+      const nr = p.r + dr * (p.card.movC || 1);
+      const nc = p.c + dc;
+      if (nr < 0 || nr >= 15 || nc < 0 || nc >= 15) continue;
+      if (dr === 0 && dc === 0) continue;
+      const cell = getCell(nr, nc);
+      if (cell) cell.classList.add('v-move');
+    }
+  }
+}
+
+function showDeployZone(player) {
+  clearOverlays();
+  const rows = player === 'p1' ? [10,11,12,13,14] : [0,1,2,3,4];
+  rows.forEach(r => {
+    for (let c = 0; c < 15; c++) {
+      const cell = getCell(r, c);
+      if (cell && !GS.cells[`${r}-${c}`]) cell.classList.add('v-summon');
+    }
+  });
+}
+
+function clearOverlays() {
+  document.querySelectorAll('.cell').forEach(c => {
+    c.classList.remove('v-summon','v-move','v-atk');
+  });
+}
+
+/* ══ MANO ════════════════════════════════════ */
+function renderHand() {
+  const hEl = document.getElementById('hand');
+  hEl.innerHTML = '';
+  const mano = GS.mano[GS.activo] || [];
+  mano.forEach(card => {
+    const el = buildCardEl(card);
+    if (card === _selCard) el.classList.add('act');
+    el.addEventListener('click', () => selectCard(card, el));
+    hEl.appendChild(el);
+  });
+  document.getElementById('yo-cards').textContent = mano.length;
+}
+
+function selectCard(card, el) {
+  if (_selCard === card) { _selCard = null; document.querySelectorAll('#hand .card').forEach(c => c.classList.remove('act')); clearOverlays(); return; }
+  _selCard = card;
+  document.querySelectorAll('#hand .card').forEach(c => c.classList.remove('act'));
+  el.classList.add('act');
+  showDeployZone(GS.activo);
+  setLog(`<strong>${card.name}</strong> · Coste <em>${card.cost} PA</em> · ${_selCell ? 'Pulsa <strong>Colocar</strong>.' : 'Toca una casilla verde.'}`);
+}
+
+function buildCardEl(card) {
+  const arq = (card.arq || 'Medieval').toLowerCase() === 'samurái' ? 'sam' : 'med';
+  const cc  = card.rarity === 'Ultra Prisma' ? 'uprisma' : card.rarity === 'Ultra Star' ? 'ustar' : card.cost === 0 ? 'inicio' : 'comum';
+  const hp  = card.hp ? `<div class="cs">HP<b>${card.hp}</b></div>` : '';
+  const mv  = card.movC ? `<div class="cs">MOV<b>${card.movC}:${card.movR}</b></div>` : '';
+  const rg  = card.vis  ? `<div class="cs">VIS<b>${card.vis}</b></div>` : '';
+  const el2 = card.arq  ? `<div class="cs">ARQ<b>${arq==='sam'?'SAM':'MED'}</b></div>` : '';
+
+  let abs = '';
+  if (card.pasN) abs += `<div class="cab pasiva"><span class="cl">◆ ${card.pasN}</span>${(card.pasE||'').slice(0,55)}</div>`;
+  if (card.h1N)  abs += `<div class="cab activa"><span class="cl">◇ ${card.h1N} (${card.h1C}PA)</span>${(card.h1E||'').slice(0,50)}</div>`;
+  if (card.h2N)  abs += `<div class="cab activa2"><span class="cl">◇ ${card.h2N}</span></div>`;
+
+  const spriteEmoji = (card.sprite || '🃏').split('_')[0];
+
+  const d = document.createElement('div');
+  d.className = `card ${arq}`;
+  d.innerHTML = `
+    <div class="ch">
+      <div class="cn">${card.name}</div>
+      <div class="cc ${cc}">${card.cost === 0 ? '🏰' : card.cost}</div>
+    </div>
+    <div class="ca">
+      ${card.imgMano ? `<img src="${card.imgMano}" alt="${card.name}">` : spriteEmoji}
+      <span class="ca-badge ${arq}">${arq === 'sam' ? 'SAM' : 'MED'}</span>
+    </div>
+    <div class="cs-row">${hp}${mv}${rg}${el2}</div>
+    ${abs ? `<div class="cabs">${abs}</div>` : ''}`;
+  return d;
+}
+
+/* ══ HUD ════════════════════════════════════ */
+function updateHUD() {
+  document.getElementById('turn-n').textContent = GS.turn;
+  document.getElementById('pa-n').textContent   = GS.paCurrent[GS.activo] ?? '—';
+  document.getElementById('d4-n').textContent   = GS.lastD4 || '—';
+  // castillo HPs
+  const myC  = Object.values(GS.piezas).find(p => p.isStructurePrincipal && p.owner === GS.activo);
+  const rivC = Object.values(GS.piezas).find(p => p.isStructurePrincipal && p.owner !== GS.activo);
+  if (myC)  {
+    document.getElementById('yo-hp-val').textContent = myC.hp;
+    document.getElementById('yo-hp').style.width     = Math.max(0,Math.round(myC.hp/myC.maxHp*100))+'%';
+  }
+  if (rivC) {
+    document.getElementById('rival-hp-val').textContent = rivC.hp;
+    document.getElementById('rival-hp').style.width      = Math.max(0,Math.round(rivC.hp/rivC.maxHp*100))+'%';
+  }
+  document.getElementById('btn-next').textContent = `▶ Turno ${GS.turn}`;
+}
+
+/* ══ LOG ════════════════════════════════════ */
+function setLog(html) { document.getElementById('log').innerHTML = html; }
+
+/* ══ INSPECTOR ══════════════════════════════ */
+function openInspector(card) {
+  const arq = (card.arq||'Medieval').toLowerCase()==='samurái'?'sam':'med';
+  const rb  = card.rarity==='Ultra Prisma'?'rb-uprisma':card.rarity==='Ultra Star'?'rb-ustar':'rb-comum';
+  const spriteEmoji = (card.sprite||'🃏').split('_')[0];
+  const artHTML = card.imgMano
+    ? `<img src="${card.imgMano}" alt="${card.name}">`
+    : spriteEmoji;
+
+  let abilHTML = '';
+  if (card.pasN) abilHTML += `<div class="insp-abil"><div class="ia-lbl pas">◆ Pasiva — ${card.pasN}</div><div class="ia-txt">${card.pasE||''}</div></div>`;
+  if (card.h1N)  abilHTML += `<div class="insp-abil"><div class="ia-lbl act">◇ ${card.h1N} · ${card.h1C} PA</div><div class="ia-txt">${card.h1E||''}</div></div>`;
+  if (card.h2N)  abilHTML += `<div class="insp-abil"><div class="ia-lbl act2">◇ ${card.h2N} · ${card.h2C} PA</div><div class="ia-txt">${card.h2E||''}</div></div>`;
+
+  document.getElementById('insp-content').innerHTML = `
+    <div class="insp-name">${card.name}</div>
+    <div class="insp-sub">${card.subtype||card.type}</div>
+    <span class="rareza-badge ${rb}">${card.rarity}</span>
+    <div class="insp-art">${artHTML}</div>
+    <div class="insp-stats">
+      <div class="is"><div class="is-lbl">Coste</div><div class="is-val">${card.cost||'—'}</div></div>
+      <div class="is"><div class="is-lbl">HP</div><div class="is-val">${card.hp||'—'}</div></div>
+      <div class="is"><div class="is-lbl">Visión</div><div class="is-val">${card.vis||'—'}</div></div>
+      <div class="is"><div class="is-lbl">Mov</div><div class="is-val">${card.movC?card.movC+':'+card.movR:'—'}</div></div>
+      <div class="is"><div class="is-lbl">PA act</div><div class="is-val">${card.paT||'—'}</div></div>
+      <div class="is"><div class="is-lbl">Slots</div><div class="is-val">${card.slots||'—'}</div></div>
+    </div>
+    ${abilHTML}
+    ${card.flv?`<div class="insp-flv">"${card.flv}"</div>`:''}`;
+
+  document.getElementById('inspector').classList.add('on');
+}
+
+function closeInspector(e) {
+  if (!e || e.target === document.getElementById('inspector')) {
+    document.getElementById('inspector').classList.remove('on');
+  }
+}
+
+/* ══ HANDOVER ═══════════════════════════════ */
+function closeHandover() { document.getElementById('handover').classList.remove('on'); }
+
+/* ══ UTILS ══════════════════════════════════ */
+function genCod() {
+  const ch = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  return Array.from({length:6},()=>ch[Math.floor(Math.random()*ch.length)]).join('');
+}
+function shuffle(a) { for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+function sleep(ms) { return new Promise(r=>setTimeout(r,ms)); }
+function setStatus(dotId,txtId,state,msg) {
+  const d = document.getElementById(dotId); if(d) d.className='sdot '+state;
+  const t = document.getElementById(txtId); if(t&&msg) t.innerHTML=msg;
+}
+function setProg(pct,msg) {
+  document.getElementById('prog').style.width=pct+'%';
+  if(msg) document.getElementById('txt-load').textContent=msg;
+}
+function copiarCod() {
+  const v = document.getElementById('cod-disp').textContent;
+  navigator.clipboard?.writeText(v).then(()=>toast('Código copiado','ok')).catch(()=>toast(v,'ok'));
+}
+let _tt;
+function toast(msg,type) {
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.className='on '+(type||'');
+  clearTimeout(_tt); _tt=setTimeout(()=>el.className='',3000);
+}
+</script>
+</body>
+</html>
