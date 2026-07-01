@@ -3,1520 +3,561 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#04050a">
-<title>Star City</title>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Spectral:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<title>Star City · Board</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
-
-/* ═══════════════════════════════════════════════════
-   TOKENS
-═══════════════════════════════════════════════════ */
+/* ── TOKENS ── */
 :root {
-  /* fondos */
-  --bg:          #04050a;
-  --bg-d:        #08090f;
-  --bg-m:        #0f1118;
-  --bg-l:        #171c28;
-  --bg-card:     #111520;
-
-  /* bordes */
-  --line:        #1e2230;
-  --line2:       #30364a;
-
-  /* dorado metálico — 5 tonos */
-  --gld-dark:    #4a3810;
-  --gld-mid:     #8a6820;
-  --gld-base:    #c9a849;
-  --gld-bright:  #f0d878;
-  --gld-pale:    #f8eecc;
-
-  /* cromado */
-  --chr-dark:    #1a1e28;
-  --chr-mid:     #3a4060;
-  --chr-light:   #8090b8;
-  --chr-bright:  #c0cce0;
-
-  /* texto */
-  --text:        #ece7d8;
-  --text-m:      #8a8478;
-  --text-d:      #3e3c36;
-
-  /* jugadores */
-  --p1:          #1a5a9a;
-  --p1b:         #3a8ad0;
-  --p1g:         rgba(26,90,154,.6);
-  --p2:          #9a1a1a;
-  --p2b:         #d04040;
-  --p2g:         rgba(154,26,26,.6);
-
-  /* cell */
-  --cs: clamp(17px, calc((min(100vw,520px) - 20px) / 15), 30px);
+  --bg:      #04050a;
+  --surface: #0b0d14;
+  --line:    #1c2030;
+  --gold:    #c9a849;
+  --gold-b:  #f0d878;
+  --gold-d:  #6a5018;
+  --chrome:  #8090b8;
+  --text:    #e8e3d4;
+  --text-d:  #44403a;
+  --cs: clamp(18px, calc((min(100vw, 560px) - 18px) / 15), 34px);
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html, body {
   height: 100%; overflow: hidden;
-  background: var(--bg); touch-action: manipulation;
+  background: var(--bg);
+  font-family: 'Cinzel', serif;
+  color: var(--text);
+  touch-action: manipulation;
 }
 body {
-  font-family: 'Spectral', serif; color: var(--text);
-  display: flex; flex-direction: column; align-items: center;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
 }
 
-/* ═══════════════════════════════════════════════════
-   FONDO PREMIUM — capas múltiples
-═══════════════════════════════════════════════════ */
+/* ── FONDO ── */
 #bg {
   position: fixed; inset: 0; z-index: 0; pointer-events: none;
-  /* piedra negra profunda */
   background:
-    radial-gradient(ellipse 160% 60% at 50% 0%,
-      rgba(201,168,73,.05) 0%, transparent 55%),
-    radial-gradient(ellipse 100% 100% at 15% 50%,
-      rgba(26,90,154,.04)  0%, transparent 50%),
-    radial-gradient(ellipse 100% 100% at 85% 50%,
-      rgba(154,26,26,.04)  0%, transparent 50%),
-    /* textura sutil */
-    repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 3px,
-      rgba(255,255,255,.004) 3px,
-      rgba(255,255,255,.004) 4px
-    );
+    radial-gradient(ellipse 140% 60% at 50% 0%,
+      rgba(201,168,73,.06) 0%, transparent 55%),
+    radial-gradient(ellipse 80% 80% at 20% 90%,
+      rgba(40,80,160,.04) 0%, transparent 50%),
+    radial-gradient(ellipse 80% 80% at 80% 90%,
+      rgba(160,30,30,.04) 0%, transparent 50%);
 }
 #bg-grid {
   position: fixed; inset: 0; z-index: 0; pointer-events: none;
   background-image:
-    linear-gradient(rgba(201,168,73,.012) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(201,168,73,.012) 1px, transparent 1px);
+    linear-gradient(rgba(201,168,73,.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(201,168,73,.015) 1px, transparent 1px);
   background-size: 48px 48px;
 }
-#bg-vig {
+#bg-vignette {
   position: fixed; inset: 0; z-index: 0; pointer-events: none;
   background: radial-gradient(ellipse at 50% 50%,
-    transparent 20%, rgba(0,0,0,.94) 100%);
+    transparent 25%, rgba(0,0,0,.92) 100%);
 }
 
-/* esquinas decorativas */
-#bg-frame {
-  position: fixed; inset: 10px; z-index: 0; pointer-events: none;
-  border: 1px solid transparent;
+/* ── ESQUINAS DECORATIVAS ── */
+.corner {
+  position: fixed; width: 36px; height: 36px; z-index: 0; pointer-events: none;
 }
-#bg-frame::before, #bg-frame::after,
-#bg-frame > .fc1, #bg-frame > .fc2 {
-  content: ''; position: absolute;
-  width: 28px; height: 28px;
+.corner::before, .corner::after {
+  content: ''; position: absolute; background: rgba(201,168,73,.22);
 }
-#bg-frame::before { top: 0;    left: 0;  border-top: 1px solid rgba(201,168,73,.2); border-left:  1px solid rgba(201,168,73,.2); }
-#bg-frame::after  { top: 0;    right: 0; border-top: 1px solid rgba(201,168,73,.2); border-right: 1px solid rgba(201,168,73,.2); }
-#bg-frame > .fc1  { bottom: 0; left: 0;  border-bottom: 1px solid rgba(201,168,73,.2); border-left:   1px solid rgba(201,168,73,.2); }
-#bg-frame > .fc2  { bottom: 0; right: 0; border-bottom: 1px solid rgba(201,168,73,.2); border-right:  1px solid rgba(201,168,73,.2); }
+.corner::before { width: 100%; height: 1px; top: 0; left: 0; }
+.corner::after  { width: 1px; height: 100%; top: 0; left: 0; }
+.c-tl { top: 14px; left: 14px; }
+.c-tr { top: 14px; right: 14px; transform: scaleX(-1); }
+.c-bl { bottom: 14px; left: 14px; transform: scaleY(-1); }
+.c-br { bottom: 14px; right: 14px; transform: scale(-1); }
 
-/* ═══════════════════════════════════════════════════
-   SCREENS
-═══════════════════════════════════════════════════ */
-.screen {
+/* ── TÍTULO ── */
+#title {
   position: relative; z-index: 1;
-  width: 100%; max-width: 520px; padding: 14px;
-  display: none; flex-direction: column; align-items: center; gap: 10px;
-  height: 100dvh; overflow-y: auto; scrollbar-width: none;
+  text-align: center; margin-bottom: 10px; user-select: none;
 }
-.screen::-webkit-scrollbar { display: none; }
-.screen.on { display: flex; }
-
-/* ═══════════════════════════════════════════════════
-   LOGO
-═══════════════════════════════════════════════════ */
-.logo { text-align: center; padding: 10px 0 6px; user-select: none; }
-.logo-main {
+#title h1 {
   font-family: 'Cinzel Decorative', serif;
-  font-size: clamp(26px, 8vw, 46px);
-  font-weight: 700; letter-spacing: .12em;
-  /* gradiente metálico dorado */
+  font-size: clamp(18px, 5vw, 32px);
+  font-weight: 700; letter-spacing: .16em;
   background: linear-gradient(160deg,
-    #4a3810 0%, #8a6820 12%, #c9a849 28%,
-    #f0d878 40%, #fff8e8 50%,
-    #f0d878 60%, #c9a849 72%,
-    #8a6820 88%, #4a3810 100%);
+    #4a3810 0%, #8a6820 14%,
+    #c9a849 30%, #f0d878 45%,
+    #fff8e0 50%, #f0d878 55%,
+    #c9a849 70%, #8a6820 86%, #4a3810 100%);
   -webkit-background-clip: text; background-clip: text;
   color: transparent;
-  filter: drop-shadow(0 0 22px rgba(201,168,73,.32));
-  display: block; line-height: 1.08;
+  filter: drop-shadow(0 0 18px rgba(201,168,73,.3));
 }
-.logo-sub {
-  font-family: 'Cinzel', serif; font-size: clamp(9px,2.4vw,13px);
-  font-weight: 400; letter-spacing: .52em; color: var(--gld-mid); opacity: .7;
-  display: block; margin-top: 5px;
+#title p {
+  font-family: 'Cinzel', serif; font-size: 9px;
+  letter-spacing: .5em; color: rgba(201,168,73,.45);
+  margin-top: 3px; text-transform: uppercase;
 }
-.logo-ver {
-  font-family: 'JetBrains Mono', monospace; font-size: 8px;
-  color: var(--text-d); letter-spacing: .22em; display: block; margin-top: 4px;
-}
-.logo-rule {
+.rule {
   display: flex; align-items: center; gap: 6px;
-  margin: 8px auto 0; width: 80%;
+  margin: 6px auto 0; width: 70%;
 }
-.logo-rule::before, .logo-rule::after {
+.rule::before, .rule::after {
   content: ''; flex: 1; height: 1px;
-  background: linear-gradient(90deg, transparent, var(--gld-mid), transparent);
+  background: linear-gradient(90deg, transparent, rgba(201,168,73,.3), transparent);
 }
-.logo-rule-gem {
-  width: 5px; height: 5px; background: var(--gld-mid);
+.rule-gem {
+  width: 5px; height: 5px;
+  background: rgba(201,168,73,.5);
   transform: rotate(45deg); flex-shrink: 0;
 }
 
-/* ═══════════════════════════════════════════════════
-   BOTONES, INPUTS, STATUS — compactos
-═══════════════════════════════════════════════════ */
-.divider {
-  width: 100%; display: flex; align-items: center; gap: 8px;
-  font-family: 'Cinzel', serif; font-size: 8px;
-  letter-spacing: .18em; text-transform: uppercase; color: var(--text-d);
-}
-.divider::before, .divider::after {
-  content: ''; flex: 1; height: 1px;
-  background: linear-gradient(90deg, transparent, var(--line2), transparent);
-}
-.btn {
-  width: 100%; padding: 11px 16px; border-radius: 5px;
-  border: 1px solid var(--line2);
-  background: linear-gradient(160deg, var(--bg-l), var(--bg-m));
-  color: var(--text-m);
-  font-family: 'Cinzel', serif; font-size: 11px; font-weight: 600;
-  letter-spacing: .12em; text-transform: uppercase;
-  cursor: pointer; transition: all .2s; position: relative; overflow: hidden;
-  -webkit-tap-highlight-color: transparent;
-}
-.btn::before {
-  content: ''; position: absolute; inset: 0;
-  background: linear-gradient(135deg, rgba(255,255,255,.04), transparent 60%);
-  pointer-events: none;
-}
-.btn:active { transform: scale(.97); }
-.btn.gold {
-  border-color: rgba(201,168,73,.4);
-  background: linear-gradient(160deg, rgba(201,168,73,.12), rgba(201,168,73,.04));
-  color: var(--gld-bright);
-  box-shadow: 0 0 24px rgba(201,168,73,.07), inset 0 1px 0 rgba(255,255,255,.06);
-}
-.btn.gold:hover {
-  background: linear-gradient(160deg, rgba(201,168,73,.2), rgba(201,168,73,.08));
-  box-shadow: 0 0 36px rgba(201,168,73,.12);
-}
-.btn.jade {
-  border-color: rgba(80,110,90,.5);
-  background: linear-gradient(160deg, rgba(80,110,90,.12), rgba(80,110,90,.04));
-  color: #88b898;
-}
-.btn.ghost {
-  background: transparent; border-color: var(--line);
-  color: var(--text-d); font-size: 9px; padding: 8px;
-}
-.btn:disabled { opacity: .25; pointer-events: none; }
-
-.sbox {
-  width: 100%; background: var(--bg-m); border: 1px solid var(--line);
-  border-radius: 6px; padding: 10px 14px;
-  display: flex; align-items: center; gap: 9px;
-}
-.sdot {
-  width: 8px; height: 8px; border-radius: 50%;
-  flex-shrink: 0; background: var(--text-d); transition: background .3s;
-}
-.sdot.wait { background: var(--gld-base); animation: dot-p 1.4s ease-in-out infinite; }
-.sdot.ok   { background: #448866; }
-.sdot.err  { background: #884444; }
-@keyframes dot-p { 0%,100%{opacity:1} 50%{opacity:.2} }
-.stxt { font-size: 11px; color: var(--text-m); line-height: 1.4; }
-.stxt b { color: var(--text); }
-
-.cbox {
-  width: 100%;
-  background: linear-gradient(135deg, var(--bg-m), var(--bg-d));
-  border: 1px solid rgba(201,168,73,.25);
-  border-radius: 8px; padding: 18px; text-align: center;
-  box-shadow: 0 0 40px rgba(201,168,73,.04);
-}
-.cbox-lbl {
-  font-family: 'Cinzel', serif; font-size: 8px;
-  letter-spacing: .2em; text-transform: uppercase; color: var(--text-d); margin-bottom: 7px;
-}
-.cbox-val {
-  font-family: 'JetBrains Mono', monospace; font-size: 34px;
-  font-weight: 700; color: var(--gld-base); letter-spacing: .32em;
-  text-shadow: 0 0 20px rgba(201,168,73,.45);
-}
-.cbox-sub { font-size: 10px; color: var(--text-d); margin-top: 6px; font-style: italic; }
-
-.field { width: 100%; display: flex; flex-direction: column; gap: 5px; }
-.field label {
-  font-family: 'Cinzel', serif; font-size: 8px;
-  letter-spacing: .18em; text-transform: uppercase; color: var(--text-d);
-}
-.field input {
-  width: 100%; padding: 10px 13px; border-radius: 5px;
-  border: 1px solid var(--line); background: var(--bg-m); color: var(--text);
-  font-family: 'JetBrains Mono', monospace; font-size: 14px;
-  outline: none; transition: all .2s; -webkit-appearance: none;
-}
-.field input:focus {
-  border-color: rgba(201,168,73,.4);
-  box-shadow: 0 0 0 3px rgba(201,168,73,.06);
-}
-.field input::placeholder { color: var(--text-d); }
-
-.dgrid { width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.dk {
-  background: var(--bg-m); border: 1px solid var(--line);
-  border-radius: 7px; padding: 10px; cursor: pointer;
-  transition: all .2s; position: relative; overflow: hidden;
-  -webkit-tap-highlight-color: transparent;
-}
-.dk::before {
-  content: ''; position: absolute; top: 0; left: 0; right: 0;
-  height: 2px; border-radius: 7px 7px 0 0; transition: all .2s;
-}
-.dk.med::before { background: linear-gradient(90deg, #5a0808, #b86828); }
-.dk.sam::before { background: linear-gradient(90deg, #082050, #2870c8); }
-.dk.sel { border-color: rgba(201,168,73,.4); box-shadow: 0 0 22px rgba(201,168,73,.06); }
-.dk.sel::before { background: linear-gradient(90deg, var(--gld-mid), var(--gld-bright)) !important; }
-.dk-name { font-family: 'Cinzel', serif; font-size: 10px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
-.dk-arq { font-size: 8px; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 5px; }
-.dk-arq.med { color: #b87840; } .dk-arq.sam { color: #7aabca; }
-.dk-desc { font-size: 7.5px; color: var(--text-d); line-height: 1.4; font-style: italic; }
-.dk-chk { position: absolute; top: 6px; right: 8px; font-size: 12px; color: var(--gld-base); opacity: 0; transition: opacity .2s; }
-.dk.sel .dk-chk { opacity: 1; }
-
-.back {
-  align-self: flex-start; font-family: 'Cinzel', serif;
-  font-size: 8px; letter-spacing: .14em; text-transform: uppercase;
-  color: var(--text-d); background: none; border: none; cursor: pointer; padding: 0;
+/* ── WRAPPER ISO ── */
+#board-wrap {
+  position: relative; z-index: 1;
+  display: flex; align-items: center; justify-content: center;
 }
 
-#toast {
-  position: fixed; bottom: 22px; left: 50%;
-  transform: translateX(-50%) translateY(14px);
-  background: rgba(15,17,24,.95); backdrop-filter: blur(10px);
-  border: 1px solid var(--line2); border-radius: 7px;
-  padding: 9px 20px; font-family: 'Cinzel', serif;
-  font-size: 10px; letter-spacing: .06em; color: var(--text-m);
-  white-space: nowrap; opacity: 0; pointer-events: none; z-index: 999;
-  transition: all .25s;
-}
-#toast.on  { opacity: 1; transform: translateX(-50%) translateY(0); }
-#toast.ok  { border-color: rgba(68,136,102,.5); color: #68c888; }
-#toast.err { border-color: rgba(136,68,68,.5);  color: #c88888; }
-
-/* ═══════════════════════════════════════════════════
-   PANTALLA DE JUEGO
-═══════════════════════════════════════════════════ */
-#s-game { padding: 0; gap: 0; overflow: hidden; }
-
-/* PLAYER STRIPS */
-.pstrip {
-  width: 100%; padding: 6px 14px;
-  display: flex; align-items: center; gap: 9px; flex-shrink: 0;
-}
-.pstrip.p1 {
-  background: linear-gradient(90deg, rgba(26,90,154,.09), transparent);
-  border-bottom: 1px solid rgba(26,90,154,.12);
-}
-.pstrip.p2 {
-  background: linear-gradient(90deg, rgba(154,26,26,.09), transparent);
-  border-bottom: 1px solid rgba(154,26,26,.12);
-}
-.pav {
-  width: 28px; height: 28px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0;
-}
-.pav.p1 { background: rgba(26,90,154,.15); border: 1px solid rgba(26,90,154,.38); }
-.pav.p2 { background: rgba(154,26,26,.15); border: 1px solid rgba(154,26,26,.38); }
-.pinfo { flex: 1; min-width: 0; }
-.pname {
-  font-family: 'Cinzel', serif; font-size: 10px; font-weight: 600;
-  color: var(--text); letter-spacing: .05em;
-}
-.phpbar {
-  width: 100%; height: 3px;
-  background: rgba(255,255,255,.06); border-radius: 2px;
-  margin-top: 4px; overflow: hidden;
-}
-.phpf { height: 100%; border-radius: 2px; transition: width .5s ease; }
-.phpf.p1 {
-  background: linear-gradient(90deg, var(--p1), var(--p1b), var(--p1));
-  background-size: 200% 100%; animation: bar-sh 3s linear infinite;
-}
-.phpf.p2 {
-  background: linear-gradient(90deg, var(--p2), var(--p2b), var(--p2));
-  background-size: 200% 100%; animation: bar-sh 3s linear infinite;
-}
-@keyframes bar-sh { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
-.pstats { display: flex; gap: 8px; margin-top: 3px; }
-.ps { font-size: 8px; color: var(--text-d); } .ps b { color: var(--text-m); }
-
-/* LOG */
-#log {
-  width: 100%; padding: 4px 14px; font-size: 10px; color: var(--text-d);
-  line-height: 1.4; flex-shrink: 0; min-height: 20px;
-  background: rgba(201,168,73,.018);
-  border-bottom: 1px solid rgba(255,255,255,.03);
-}
-#log em { color: var(--gld-base); font-style: normal; }
-#log strong { color: var(--text-m); }
-
-/* ═══════════════════════════════════════════════════
-   VIEWPORT + ISO STAGE
-═══════════════════════════════════════════════════ */
-#board-vp {
-  flex: 1; display: flex; align-items: center; justify-content: center;
-  overflow: hidden; width: 100%; position: relative; min-height: 0;
-}
-
-/* CAPA DE EFECTOS DE COMBATE — sobre el tablero, z-index alto */
-#fx-layer {
-  position: absolute; inset: 0; z-index: 50;
-  pointer-events: none; overflow: hidden;
-}
-/* partícula de ataque genérica */
-.fx-particle {
-  position: absolute;
-  width: 4px; height: 4px; border-radius: 50%;
-  background: var(--gld-bright);
-  box-shadow: 0 0 6px var(--gld-base);
-  pointer-events: none;
-}
-/* rayo (Raikiri) */
-.fx-bolt {
-  position: absolute; height: 2px;
-  background: linear-gradient(90deg, transparent, #80c8ff, #ffffff, #80c8ff, transparent);
-  border-radius: 1px;
-  box-shadow: 0 0 8px #4090e0, 0 0 20px rgba(64,144,224,.5);
-  pointer-events: none;
-  transform-origin: left center;
-}
-/* corte de espada */
-.fx-slash {
-  position: absolute; width: 3px; height: 40px;
-  background: linear-gradient(0deg, transparent, rgba(255,220,100,.9), transparent);
-  border-radius: 2px;
-  box-shadow: 0 0 10px rgba(255,200,80,.6);
-  pointer-events: none;
-  transform-origin: center center;
-}
-/* impacto */
-.fx-impact {
-  position: absolute; width: 20px; height: 20px; border-radius: 50%;
-  background: radial-gradient(circle, rgba(255,255,200,.9), transparent 70%);
-  box-shadow: 0 0 16px rgba(255,230,100,.8);
-  pointer-events: none;
-  transform: translate(-50%, -50%);
-}
-
-.iso-stage {
-  transform: rotateX(46deg) rotateZ(-27deg) scale(.82);
+/* ISO STAGE */
+.iso {
+  transform: rotateX(44deg) rotateZ(-26deg) scale(.86);
   transform-style: preserve-3d;
-  will-change: transform;
   filter:
-    drop-shadow(0 24px 60px rgba(0,0,0,.92))
-    drop-shadow(0  6px 18px rgba(0,0,0,.6));
+    drop-shadow(0 24px 60px rgba(0,0,0,.9))
+    drop-shadow(0  6px 20px rgba(0,0,0,.6))
+    drop-shadow(0  0  60px rgba(201,168,73,.04));
 }
 
-/* ═══════════════════════════════════════════════════
-   TABLERO PREMIUM
-═══════════════════════════════════════════════════ */
+/* ── BOARD ── */
 #board {
   display: grid;
   grid-template-columns: repeat(15, var(--cs));
   grid-template-rows:    repeat(15, var(--cs));
   gap: 1px;
-  /* separadores con gradiente dorado */
+  /* separadores dorados */
   background: linear-gradient(135deg,
-    rgba(201,168,73,.12) 0%,
-    rgba(201,168,73,.06) 50%,
-    rgba(201,168,73,.10) 100%);
-  /* borde exterior premium */
-  border: 1px solid;
-  border-color: rgba(201,168,73,.3);
-  border-radius: 3px;
-  overflow: hidden;
+    rgba(201,168,73,.18) 0%,
+    rgba(201,168,73,.08) 40%,
+    rgba(201,168,73,.14) 100%);
+  /* borde exterior metálico */
+  border: 1px solid rgba(201,168,73,.35);
+  border-radius: 3px; overflow: hidden;
   box-shadow:
-    /* resplandor dorado exterior */
-    0 0 0 1px rgba(201,168,73,.08),
-    0 0 30px rgba(201,168,73,.06),
-    /* sombra profunda */
-    0 8px 40px rgba(0,0,0,.8),
-    /* inset rim */
+    0 0 0 1px rgba(201,168,73,.10),
+    0 0 28px rgba(201,168,73,.08),
+    0 8px 50px rgba(0,0,0,.85),
     inset 0 0 0 1px rgba(255,255,255,.04);
 }
 
-/* ═══════════════════════════════════════════════════
-   CELDAS PREMIUM
-═══════════════════════════════════════════════════ */
+/* ── CELDAS ── */
 .cell {
   width: var(--cs); height: var(--cs);
-  background: #07080e;
   position: relative; cursor: pointer; overflow: visible;
-  /* transición suave para hover */
-  transition: background .14s ease;
+  background: #07080d;
+  transition: background .12s ease;
 }
 
-/* zonas (iluminadas) */
-.cell.lit.ze { background: #100806; }
-.cell.lit.zc { background: #080a10; }
-.cell.lit.zy { background: #060a12; }
+/* zona superior (rival) */
+.cell.ze { background: #0b0608; }
+/* zona centro */
+.cell.zc { background: #07080d; }
+/* zona inferior (jugador) */
+.cell.zy { background: #060a0d; }
 
-/* ── HOVER HOLOGRÁFICO ──────────────────────────── */
-.cell.lit:not(.fog):not(.sel)::after {
-  content: '';
-  position: absolute; inset: 0; z-index: 8;
+/* ── CELDA ACTIVA (con pieza) ── */
+.cell.active {
+  background: rgba(201,168,73,.08) !important;
+}
+
+/* ── HOVER ── */
+.cell:not(.active):hover {
+  background: rgba(201,168,73,.07);
+}
+/* efecto holográfico en hover */
+.cell:not(.active)::after {
+  content: ''; position: absolute; inset: 0; z-index: 8;
   opacity: 0;
   background: linear-gradient(135deg,
     rgba(201,168,73,.0)   0%,
-    rgba(201,168,73,.14) 40%,
-    rgba(192,220,255,.08) 60%,
+    rgba(201,168,73,.12) 45%,
+    rgba(192,220,255,.06) 55%,
     rgba(201,168,73,.0)  100%);
   border: 1px solid rgba(201,168,73,.0);
-  transition: opacity .18s ease, border-color .18s ease;
+  transition: opacity .16s, border-color .16s;
   pointer-events: none;
 }
-.cell.lit:hover:not(.fog):not(.sel)::after {
+.cell:not(.active):hover::after {
   opacity: 1;
-  border-color: rgba(201,168,73,.35);
-  box-shadow:
-    inset 0 0 6px rgba(201,168,73,.12),
-    0 0 4px rgba(201,168,73,.18);
+  border-color: rgba(201,168,73,.3);
+  box-shadow: inset 0 0 5px rgba(201,168,73,.1);
 }
 
-/* ── NIEBLA ─────────────────────────────────────── */
-.cell.fog {
-  background: #02030508 !important;
-  cursor: default;
-}
-.cell.fog > * { display: none !important; }
-/* microdetalle en niebla — barely visible */
-.cell.fog::before {
-  content: ''; position: absolute; inset: 0;
-  background: radial-gradient(circle at 50% 50%,
-    rgba(255,255,255,.005), transparent 70%);
-  display: block !important;
-}
-
-/* ── SELECCIÓN ──────────────────────────────────── */
-.cell.sel::after {
-  content: ''; position: absolute; inset: 0; z-index: 10;
-  border: 1px solid var(--gld-base);
-  box-shadow:
-    inset 0 0 8px rgba(201,168,73,.22),
-    0 0 6px rgba(201,168,73,.22);
-  animation: sel-pulse 1.8s ease-in-out infinite;
-  pointer-events: none;
-}
-@keyframes sel-pulse {
-  0%,100% { opacity: 1; box-shadow: inset 0 0 8px rgba(201,168,73,.22), 0 0 6px rgba(201,168,73,.22); }
-  50%      { opacity: .42; box-shadow: inset 0 0 3px rgba(201,168,73,.08), 0 0 2px rgba(201,168,73,.08); }
-}
-
-/* ── OVERLAY DINÁMICO (z-index 4 — debajo de efectos) ── */
-.cell .ov {
-  position: absolute; inset: 0; z-index: 4;
-  pointer-events: none; opacity: 0; transition: opacity .18s;
-}
-
-/* zona de castillo — pulso dorado elegante */
-.cell.v-castle .ov {
-  opacity: 1;
-  background: radial-gradient(ellipse at 50% 50%,
-    rgba(201,168,73,.14), rgba(201,168,73,.06) 60%, transparent);
-  box-shadow: inset 0 0 0 1px rgba(201,168,73,.38);
-  animation: castle-pulse 2.4s ease-in-out infinite;
-}
-@keyframes castle-pulse {
-  0%,100% { opacity: 1; }
-  50%      { opacity: .38; }
-}
-
-/* zona de invocación — verde */
-.cell.v-summon .ov {
-  opacity: 1;
-  background: radial-gradient(ellipse at 50% 50%,
-    rgba(40,200,100,.14), rgba(40,200,100,.06) 60%, transparent);
-  box-shadow: inset 0 0 0 1px rgba(40,200,100,.38);
-  animation: summon-pulse 2s ease-in-out infinite;
-}
-@keyframes summon-pulse {
-  0%,100% { opacity: 1; } 50% { opacity: .42; }
-}
-
-/* rango de movimiento — azul cromado */
-.cell.v-move .ov {
-  opacity: 1;
-  background: radial-gradient(ellipse at 50% 50%,
-    rgba(60,140,220,.14), rgba(60,140,220,.06) 60%, transparent);
-  box-shadow: inset 0 0 0 1px rgba(60,140,220,.35);
-}
-
-/* rango de ataque — rojo */
-.cell.v-atk .ov {
-  opacity: 1;
-  background: radial-gradient(ellipse at 50% 50%,
-    rgba(220,60,60,.18), rgba(220,60,60,.08) 60%, transparent);
-  box-shadow: inset 0 0 0 1px rgba(220,60,60,.4);
-  animation: atk-pulse 1.4s ease-in-out infinite;
-}
-@keyframes atk-pulse {
-  0%,100% { opacity: 1; } 50% { opacity: .4; }
-}
-
-/* ── PIEZAS ─────────────────────────────────────── */
-.cell.pp1::before, .cell.pp2::before {
-  content: ''; position: absolute; inset: 18%; border-radius: 50%; z-index: 2;
-  animation: piece-float 3.5s ease-in-out infinite;
-}
-.cell.pp1::before {
-  background: radial-gradient(circle at 36% 30%, #8ac4f0, #1a4a88);
-  box-shadow:
-    2px 3px 0 rgba(0,0,0,.9),
-    0 0 14px var(--p1g),
-    0 -2px 0 rgba(120,190,240,.2);
-}
-.cell.pp2::before {
-  background: radial-gradient(circle at 36% 30%, #f08888, #881a1a);
-  box-shadow:
-    2px 3px 0 rgba(0,0,0,.9),
-    0 0 14px var(--p2g),
-    0 -2px 0 rgba(240,120,120,.2);
-}
-@keyframes piece-float {
-  0%,100% { transform: translateY(0); }
-  50%      { transform: translateY(-1.5px); }
-}
-
-/* ── SPRITE 2.5D ELEVADO ────────────────────────── */
-.cell .sp {
-  position: absolute; left: 0; right: 0;
-  bottom: -12%; height: 148%; z-index: 3;
+/* ── PIEZA (imagen) ── */
+.cell .piece {
+  position: absolute;
+  left: 0; right: 0;
+  /* elevada hacia arriba — efecto 2.5D */
+  bottom: -14%; height: 152%;
+  z-index: 3;
   display: flex; align-items: flex-end; justify-content: center;
   pointer-events: none;
   transition: transform .2s ease, filter .25s ease;
 }
-.cell:hover .sp { transform: translateY(-1.5px); }
+.cell:hover .piece { transform: translateY(-1.5px); }
 
-.cell .sp .emo {
-  font-size: calc(var(--cs) * .84); line-height: 1; margin-bottom: 1px;
-  filter:
-    drop-shadow(1px -2px 0 rgba(0,0,0,.75))
-    drop-shadow(2px  4px 0 rgba(0,0,0,.65));
-}
-.cell .sp img {
-  width: 93%; max-height: 150%; object-fit: contain;
-  image-rendering: pixelated; margin-bottom: 1px;
+.cell .piece img {
+  width: 92%; max-height: 155%;
+  object-fit: contain;
+  image-rendering: pixelated;
+  margin-bottom: 1px;
+  /* sombra proyectada — da volumen isométrico */
   filter:
     drop-shadow(1px -3px 0 rgba(0,0,0,.88))
-    drop-shadow(2px  5px 2px rgba(0,0,0,.6));
+    drop-shadow(2px  5px 2px rgba(0,0,0,.65))
+    drop-shadow(0 0 10px rgba(201,168,73,.5));
   transition: filter .25s ease;
 }
-
-/* auras de color programáticas */
-.cell.pp1 .sp img, .cell.pp1 .sp .emo {
+/* aura dorada pulsante en piezas activas */
+.cell.active .piece img {
   filter:
-    drop-shadow(0 0 10px rgba(26,90,154,.7))
-    drop-shadow(1px -3px 0 rgba(0,0,0,.88))
-    drop-shadow(2px  5px 2px rgba(0,0,0,.6));
+    drop-shadow(0 0 14px rgba(201,168,73,.75))
+    drop-shadow(1px -3px 0 rgba(0,0,0,.9))
+    drop-shadow(2px  5px 2px rgba(0,0,0,.65))
+    drop-shadow(0 0  6px rgba(240,216,120,.5));
+  animation: piece-aura 3s ease-in-out infinite;
 }
-.cell.pp2 .sp img, .cell.pp2 .sp .emo {
-  filter:
-    drop-shadow(0 0 10px rgba(154,26,26,.7))
-    drop-shadow(1px -3px 0 rgba(0,0,0,.88))
-    drop-shadow(2px  5px 2px rgba(0,0,0,.6));
-}
-/* castillos — aura más intensa + corona dorada */
-.cell.cas-p1 .sp img, .cell.cas-p1 .sp .emo {
-  filter:
-    drop-shadow(0 0 16px rgba(26,90,154,.95))
-    drop-shadow(0 -6px 0 rgba(0,0,0,.95))
-    drop-shadow(0 0 8px var(--p1b));
-  animation: castle-glow 4s ease-in-out infinite;
-}
-.cell.cas-p2 .sp img, .cell.cas-p2 .sp .emo {
-  filter:
-    drop-shadow(0 0 16px rgba(154,26,26,.95))
-    drop-shadow(0 -6px 0 rgba(0,0,0,.95))
-    drop-shadow(0 0 8px var(--p2b));
-  animation: castle-glow 4s ease-in-out infinite;
-}
-@keyframes castle-glow {
-  0%,100% { filter: drop-shadow(0 0 14px rgba(26,90,154,.9)) drop-shadow(0 -5px 0 rgba(0,0,0,.95)); }
-  50%      { filter: drop-shadow(0 0 22px rgba(58,138,208,.9)) drop-shadow(0 -5px 0 rgba(0,0,0,.95)); }
+@keyframes piece-aura {
+  0%,100% {
+    filter:
+      drop-shadow(0 0 14px rgba(201,168,73,.75))
+      drop-shadow(1px -3px 0 rgba(0,0,0,.9))
+      drop-shadow(2px  5px 2px rgba(0,0,0,.65));
+  }
+  50% {
+    filter:
+      drop-shadow(0 0 22px rgba(240,216,120,.9))
+      drop-shadow(1px -3px 0 rgba(0,0,0,.9))
+      drop-shadow(2px  5px 2px rgba(0,0,0,.65));
+  }
 }
 
-/* HP bar */
-.cell .hpb {
-  position: absolute; bottom: 1px; left: 7%; right: 7%;
-  height: 2px; background: rgba(0,0,0,.75); border-radius: 1px; z-index: 6;
+/* flotación suave de la pieza */
+.cell.active .piece {
+  animation: float 3.4s ease-in-out infinite;
 }
-.cell .hpf { height: 100%; border-radius: 1px; transition: width .4s ease; }
-.cell .hpf.p1c { background: linear-gradient(90deg, #1A5A9A, #4AAAE8); }
-.cell .hpf.p2c { background: linear-gradient(90deg, #9A1A1A, #E84A4A); }
-.cell .hpf.low { animation: hp-low 1s ease-in-out infinite; }
-@keyframes hp-low { 0%,100%{opacity:1} 50%{opacity:.3} }
-
-/* estado de estado alterado (badge) */
-.cell .sbdg {
-  position: absolute; top: 1px; left: 1px; z-index: 7;
-  font-size: 6px; line-height: 1; pointer-events: none;
+@keyframes float {
+  0%,100% { transform: translateY(0); }
+  50%      { transform: translateY(-2px); }
 }
 
-/* ═══════════════════════════════════════════════════
-   PA DISPLAY PREMIUM
-═══════════════════════════════════════════════════ */
-#pts {
-  width: 100%; flex-shrink: 0;
-  display: flex; align-items: stretch;
-  background: linear-gradient(90deg,
-    rgba(201,168,73,.07) 0%,
-    rgba(201,168,73,.03) 60%,
-    transparent 100%);
-  border-top: 1px solid rgba(201,168,73,.18);
-  border-bottom: 1px solid rgba(201,168,73,.08);
-  padding: 5px 14px; gap: 12px;
+/* ── BORDE DORADO DE CELDA ACTIVA ── */
+.cell.active::before {
+  content: ''; position: absolute; inset: 0; z-index: 9;
+  pointer-events: none;
+  border: 1px solid rgba(201,168,73,.4);
+  box-shadow:
+    inset 0 0 10px rgba(201,168,73,.1),
+    0 0 6px rgba(201,168,73,.2);
+  animation: cell-glow 3s ease-in-out infinite;
 }
-.pa-main {
-  display: flex; flex-direction: column; justify-content: center;
-  border-right: 1px solid rgba(201,168,73,.15);
-  padding-right: 12px; min-width: 68px;
-}
-.pa-lbl {
-  font-family: 'Cinzel', serif; font-size: 7px;
-  letter-spacing: .18em; text-transform: uppercase;
-  color: var(--text-d); margin-bottom: 1px;
-}
-.pa-val {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 28px; font-weight: 700; line-height: 1;
-  color: var(--gld-base);
-  text-shadow: 0 0 18px rgba(201,168,73,.5);
-  transition: transform .28s cubic-bezier(.17,.67,.35,1.5), color .2s;
-}
-.pa-val.pop { transform: scale(1.38); color: var(--gld-bright); }
-.pa-right {
-  flex: 1; display: flex; flex-direction: column;
-  justify-content: center; gap: 3px; padding-left: 2px;
-}
-.pa-pills { display: flex; gap: 4px; flex-wrap: wrap; }
-.pill {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px; padding: 2px 8px; border-radius: 20px;
-  display: flex; align-items: center; gap: 3px;
-}
-.pill.d4  { background: rgba(201,168,73,.07); border: 1px solid rgba(201,168,73,.2); color: var(--gld-base); }
-.pill.cas { background: rgba(180,115,55,.07); border: 1px solid rgba(180,115,55,.2); color: #d89858; }
-.pill.cos { background: rgba(80,120,90,.07);  border: 1px solid rgba(80,120,90,.2);  color: #88b898; }
-.pa-turn {
-  font-family: 'Cinzel', serif; font-size: 8px;
-  color: var(--text-d); letter-spacing: .08em;
-}
-.pa-turn b { color: var(--p1b); font-family: 'JetBrains Mono', monospace; }
-
-/* ═══════════════════════════════════════════════════
-   ACTION BAR
-═══════════════════════════════════════════════════ */
-#abar {
-  width: 100%; display: flex; gap: 5px;
-  padding: 4px 10px; flex-shrink: 0;
-  background: linear-gradient(0deg, var(--bg-d), transparent);
-  border-top: 1px solid rgba(255,255,255,.04);
+@keyframes cell-glow {
+  0%,100% {
+    border-color: rgba(201,168,73,.35);
+    box-shadow: inset 0 0 8px rgba(201,168,73,.08), 0 0 5px rgba(201,168,73,.15);
+  }
+  50% {
+    border-color: rgba(240,216,120,.6);
+    box-shadow: inset 0 0 14px rgba(201,168,73,.18), 0 0 10px rgba(201,168,73,.28);
+  }
 }
 
-/* ═══════════════════════════════════════════════════
-   MANO
-═══════════════════════════════════════════════════ */
-#hand-area { width: 100%; flex-shrink: 0; padding: 0 8px 8px; }
-.hand-lbl {
-  font-family: 'Cinzel', serif; font-size: 7px;
-  letter-spacing: .2em; text-transform: uppercase;
-  color: var(--text-d); margin-bottom: 4px;
-  display: flex; align-items: center; gap: 6px;
+/* ── ESTADO SELECCIONADO ── */
+.cell.sel::after {
+  opacity: 1 !important;
+  background: rgba(201,168,73,.14) !important;
+  border-color: var(--gold) !important;
+  box-shadow:
+    inset 0 0 12px rgba(201,168,73,.25) !important,
+    0 0 8px rgba(201,168,73,.3) !important;
+  animation: sel-pulse 1.6s ease-in-out infinite;
 }
-.hand-lbl::after {
-  content: ''; flex: 1; height: 1px;
-  background: linear-gradient(90deg, rgba(201,168,73,.15), transparent);
+@keyframes sel-pulse {
+  0%,100% { opacity: 1; }
+  50%      { opacity: .5; }
 }
-#hand {
-  display: flex; gap: 5px; overflow-x: auto; padding-bottom: 3px;
-  scrollbar-width: none; -webkit-overflow-scrolling: touch;
-}
-#hand::-webkit-scrollbar { display: none; }
 
-/* ═══════════════════════════════════════════════════
-   CARTAS PREMIUM
-═══════════════════════════════════════════════════ */
-.card {
-  flex-shrink: 0; width: 72px;
-  border-radius: 8px; border: 1px solid var(--line);
-  background: linear-gradient(160deg, var(--bg-l), var(--bg-card));
-  display: flex; flex-direction: column;
-  cursor: pointer; position: relative; overflow: hidden;
-  transition:
-    transform .2s cubic-bezier(.17,.67,.35,1.3),
-    border-color .2s, box-shadow .2s;
+/* ── INFO BAR ── */
+#info {
+  position: relative; z-index: 1;
+  margin-top: 10px;
+  display: flex; align-items: center; gap: 10px;
+  font-family: 'Cinzel', serif; font-size: 9px;
+  letter-spacing: .12em; color: var(--text-d);
+}
+#info-cell { color: var(--gold); }
+.info-sep {
+  width: 4px; height: 4px; background: var(--gold-d);
+  transform: rotate(45deg); opacity: .5;
+}
+
+/* ── PANEL PIEZAS (selector) ── */
+#pieces-panel {
+  position: relative; z-index: 1;
+  margin-top: 10px;
+  display: flex; gap: 6px;
+  align-items: center;
+}
+.piece-btn {
+  width: 44px; height: 44px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  cursor: pointer; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .18s;
+  position: relative;
   -webkit-tap-highlight-color: transparent;
 }
-/* holograma */
-.card::after {
-  content: ''; position: absolute; inset: 0; border-radius: 8px;
-  background: linear-gradient(135deg,
-    rgba(255,255,255,.06) 0%, transparent 38%,
-    rgba(255,255,255,.02) 100%);
-  pointer-events: none;
-}
-/* acento superior */
-.card::before {
-  content: ''; position: absolute; top: 0; left: 0; right: 0;
-  height: 2px; border-radius: 8px 8px 0 0; transition: all .2s;
-}
-.card.med::before { background: linear-gradient(90deg, #5a0808, #b86828); }
-.card.sam::before { background: linear-gradient(90deg, #082050, #2870c8); }
-
-.card.act {
-  border-color: rgba(201,168,73,.55);
-  transform: translateY(-10px);
-  box-shadow: 0 12px 28px rgba(201,168,73,.18), 0 0 0 1px rgba(201,168,73,.1);
-  z-index: 2;
-}
-.card.act::before {
-  background: linear-gradient(90deg, var(--gld-mid), var(--gld-bright)) !important;
-  box-shadow: 0 0 8px rgba(201,168,73,.4);
-}
-/* animación robo carta */
-.card.new-card { animation: deal-in .34s ease forwards; }
-@keyframes deal-in {
-  from { opacity: 0; transform: translateY(20px) scale(.86); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-.card:active:not(.act) { transform: translateY(-3px); }
-.card:hover:not(.act)  {
-  border-color: var(--line2); transform: translateY(-4px);
-  box-shadow: 0 5px 18px rgba(0,0,0,.5);
-}
-
-.ch { padding: 5px 5px 2px; position: relative; }
-.cn {
-  font-family: 'Cinzel', serif; font-size: 7.5px; font-weight: 600;
-  color: var(--text); line-height: 1.2; margin-right: 17px; min-height: 18px;
-}
-.cc {
-  position: absolute; top: 3px; right: 3px; width: 16px; height: 16px;
-  border-radius: 50%; display: flex; align-items: center;
-  justify-content: center; font-size: 8px; font-weight: 700; color: var(--bg);
-}
-.cc.comun  { background: #6a7a8a; }
-.cc.ustar  { background: var(--p1); }
-.cc.uprisma{ background: var(--gld-base); }
-.cc.inicio { background: #3a8858; font-size: 6px; }
-
-.ca {
-  margin: 0 5px 2px; height: 38px; border-radius: 4px;
-  background: linear-gradient(135deg, var(--bg), var(--bg-l));
-  display: flex; align-items: center; justify-content: center; font-size: 19px;
-  position: relative; overflow: hidden;
-}
-.ca img { width: 100%; height: 100%; object-fit: cover; border-radius: 4px; }
-.ca-badge {
-  position: absolute; bottom: 2px; right: 3px; font-size: 6px; font-weight: 600;
-  text-transform: uppercase; padding: 1px 3px; border-radius: 2px;
-}
-.ca-badge.med { background: rgba(90,8,8,.4);  color: #d49070; }
-.ca-badge.sam { background: rgba(8,32,80,.4); color: #78aad8; }
-
-.cs-r { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; padding: 0 4px 2px; }
-.cs   { font-size: 6.5px; color: var(--text-d); display: flex; align-items: center; gap: 2px; }
-.cs b { color: var(--text-m); font-weight: 500; }
-
-.cabs { border-top: 1px solid rgba(255,255,255,.05); padding: 2px 4px 3px;
-  display: flex; flex-direction: column; gap: 1px; }
-.cab  { font-size: 6px; line-height: 1.3; color: var(--text-d); }
-.cab .cl { font-weight: 700; display: block; }
-.cab.pas .cl { color: #448866; }
-.cab.act .cl { color: var(--p1b); }
-
-/* ═══════════════════════════════════════════════════
-   DADO 3D PREMIUM
-═══════════════════════════════════════════════════ */
-#dice-scene {
-  position: fixed; inset: 0; z-index: 600;
-  pointer-events: none;
-  display: flex; align-items: center; justify-content: center;
-  perspective: 700px;
-}
-.d4w {
-  width: 90px; height: 90px;
-  transform-style: preserve-3d; opacity: 0;
-}
-.d4w.roll {
-  animation: dice-3d 1.25s cubic-bezier(.22,.68,.12,1.12) forwards;
-}
-@keyframes dice-3d {
-  0%   { opacity:0; transform: rotateX(-100deg) rotateY(-70deg) rotateZ(40deg)  scale(.18) }
-  12%  { opacity:1; transform: rotateX( 380deg) rotateY( 260deg) rotateZ(-18deg) scale(1.18) }
-  42%  { opacity:1; transform: rotateX( 720deg) rotateY( 500deg) rotateZ( 8deg)  scale(1.02) }
-  70%  { opacity:1; transform: rotateX( 960deg) rotateY( 650deg) rotateZ(-3deg)  scale(1.06) }
-  88%  { opacity:1; transform: rotateX(1060deg) rotateY( 720deg) rotateZ( 1deg)  scale(1.02) }
-  100% { opacity:0; transform: rotateX(1080deg) rotateY( 740deg) rotateZ( 0deg) translateY(-22px) scale(.87) }
-}
-.d4f {
-  position: absolute; width: 80px; height: 80px;
-  border: 1px solid rgba(201,168,73,.45); border-radius: 10px;
-  display: flex; align-items: center; justify-content: center;
-  font-family: 'Cinzel Decorative', serif; font-size: 38px; font-weight: 700;
-  color: var(--gld-base);
-  background: linear-gradient(145deg, rgba(20,24,38,.98), rgba(10,12,18,.99));
-  box-shadow:
-    inset 0 0 28px rgba(201,168,73,.07),
-    0 0 30px rgba(201,168,73,.2);
-  text-shadow: 0 0 20px rgba(201,168,73,.88);
-  backface-visibility: hidden;
-}
-.d4f::before {
-  content: ''; position: absolute; inset: 4px;
-  border: 1px solid rgba(201,168,73,.1); border-radius: 8px;
-}
-.d4f::after {
+.piece-btn::before {
   content: ''; position: absolute; inset: 0;
-  background: linear-gradient(135deg, rgba(255,255,255,.05) 0%, transparent 50%);
-  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(255,255,255,.04), transparent 50%);
+  pointer-events: none;
 }
-.d4-A { transform: translateZ(40px); }
-.d4-B { transform: rotateY(180deg) translateZ(40px); }
-.d4-C { transform: rotateY( 90deg) translateZ(40px); }
-.d4-D { transform: rotateY(-90deg) translateZ(40px); }
-.d4-E { transform: rotateX( 90deg) translateZ(40px); }
-.d4-F { transform: rotateX(-90deg) translateZ(40px); }
+.piece-btn:hover {
+  border-color: rgba(201,168,73,.4);
+  box-shadow: 0 0 14px rgba(201,168,73,.1);
+}
+.piece-btn.sel-piece {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 1px rgba(201,168,73,.2), 0 0 18px rgba(201,168,73,.18);
+}
+.piece-btn img {
+  width: 80%; height: 80%; object-fit: contain;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 0 4px rgba(201,168,73,.4));
+}
+.piece-btn .emo { font-size: 22px; }
 
-/* resultado flash */
-#dice-res {
-  position: fixed; top: 50%; left: 50%; z-index: 601;
-  transform: translate(-50%,-50%) scale(0);
-  font-family: 'Cinzel Decorative', serif;
-  font-size: 56px; font-weight: 700; color: var(--gld-bright);
-  text-shadow: 0 0 30px rgba(201,168,73,.9), 0 0 60px rgba(201,168,73,.4);
-  pointer-events: none; opacity: 0;
-}
-#dice-res.show {
-  animation: res-pop .72s cubic-bezier(.17,.67,.35,1.3) forwards;
-}
-@keyframes res-pop {
-  0%  { opacity:0; transform: translate(-50%,-50%) scale(.35); }
-  38% { opacity:1; transform: translate(-50%,-50%) scale(1.22); }
-  65% { opacity:1; transform: translate(-50%,-50%) scale(1); }
-  100%{ opacity:0; transform: translate(-50%,-62%) scale(.88); }
+/* etiqueta "Selecciona pieza" */
+#pieces-label {
+  position: relative; z-index: 1;
+  font-size: 8px; letter-spacing: .18em;
+  text-transform: uppercase; color: var(--text-d);
+  margin-top: 4px; text-align: center;
 }
 
-/* ═══════════════════════════════════════════════════
-   BANNER DE FASE
-═══════════════════════════════════════════════════ */
-#phase-banner {
-  position: fixed; top: 50%; left: 50%;
-  transform: translate(-50%,-50%); z-index: 400;
-  pointer-events: none; opacity: 0;
-  background: rgba(8,10,16,.94); backdrop-filter: blur(7px);
-  border: 1px solid rgba(201,168,73,.26); border-radius: 11px;
-  padding: 14px 36px; text-align: center;
+/* ── HINT ── */
+#hint {
+  position: relative; z-index: 1;
+  margin-top: 8px;
+  font-size: 9px; letter-spacing: .1em;
+  color: var(--text-d); text-align: center;
+  font-family: 'Cinzel', serif;
 }
-#phase-banner.show { animation: banner .98s ease forwards; }
-@keyframes banner {
-  0%  { opacity:0; transform: translate(-50%,-50%) scale(.68); }
-  26% { opacity:1; transform: translate(-50%,-50%) scale(1.06); }
-  58% { opacity:1; transform: translate(-50%,-50%) scale(1); }
-  100%{ opacity:0; transform: translate(-50%,-60%) scale(.93); }
-}
-.pb-t {
-  font-family: 'Cinzel Decorative', serif; font-size: 18px; font-weight: 700;
-  color: var(--gld-base); text-shadow: 0 0 20px rgba(201,168,73,.45);
-}
-.pb-s {
-  font-family: 'Cinzel', serif; font-size: 10px;
-  color: var(--text-m); margin-top: 4px; letter-spacing: .06em;
-}
-
-/* ═══════════════════════════════════════════════════
-   CASTLE MODAL
-═══════════════════════════════════════════════════ */
-#castle-modal {
-  position: fixed; inset: 0; z-index: 300;
-  background: rgba(3,4,9,.9); backdrop-filter: blur(6px);
-  display: none; align-items: flex-end; justify-content: center;
-}
-#castle-modal.on { display: flex; }
-.cm-box {
-  width: 100%; max-width: 520px;
-  background: linear-gradient(160deg, #141826, #0f1220);
-  border-radius: 16px 16px 0 0;
-  border-top: 1px solid rgba(201,168,73,.28);
-  padding: 22px;
-  box-shadow: 0 -22px 65px rgba(0,0,0,.65);
-}
-.cm-title {
-  font-family: 'Cinzel Decorative', serif; font-size: 15px;
-  color: var(--gld-base); margin-bottom: 7px; letter-spacing: .04em;
-}
-.cm-sub { font-size: 12px; color: var(--text-m); line-height: 1.6; margin-bottom: 18px; }
-
-/* ═══════════════════════════════════════════════════
-   INSPECTOR
-═══════════════════════════════════════════════════ */
-#inspector {
-  position: fixed; inset: 0; z-index: 200;
-  background: rgba(3,4,9,.9); backdrop-filter: blur(7px);
-  display: none; align-items: flex-end; justify-content: center;
-}
-#inspector.on { display: flex; }
-#i-card {
-  width: 100%; max-width: 520px;
-  background: linear-gradient(160deg, #141826, #0f1220);
-  border-radius: 18px 18px 0 0; border-top: 1px solid var(--line2);
-  padding: 18px; max-height: 88dvh; overflow-y: auto; scrollbar-width: none;
-  box-shadow: 0 -24px 70px rgba(0,0,0,.7);
-}
-#i-card::-webkit-scrollbar { display: none; }
-.ic  { float: right; background: none; border: none; color: var(--text-d); font-size: 22px; cursor: pointer; margin-top: -4px; padding: 0; line-height: 1; }
-.in  { font-family: 'Cinzel', serif; font-size: 17px; font-weight: 700; color: var(--text); margin-bottom: 2px; letter-spacing: .04em; }
-.isb { font-size: 10px; color: var(--text-d); letter-spacing: .08em; margin-bottom: 8px; }
-.ia  {
-  width: 100%; height: 115px; border-radius: 10px;
-  background: linear-gradient(135deg, var(--bg), var(--bg-l));
-  display: flex; align-items: center; justify-content: center; font-size: 50px;
-  margin-bottom: 12px; overflow: hidden; position: relative;
-}
-.ia img { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; }
-.ia::after { content: ''; position: absolute; inset: 0;
-  background: linear-gradient(135deg, rgba(255,255,255,.04), transparent 50%); }
-.iss  { display: grid; grid-template-columns: repeat(3,1fr); gap: 5px; margin-bottom: 12px; }
-.is   { background: rgba(255,255,255,.03); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; text-align: center; }
-.isl  { font-family: 'Cinzel', serif; font-size: 7px; color: var(--text-d); letter-spacing: .12em; text-transform: uppercase; }
-.isv  { font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 600; color: var(--text); }
-.iab  { margin-bottom: 8px; }
-.iabl { font-family: 'Cinzel', serif; font-size: 9px; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 3px; font-weight: 600; }
-.iabl.pas { color: #448866; } .iabl.act { color: var(--p1b); } .iabl.ac2 { color: #9060c0; }
-.iabt { font-size: 12px; color: var(--text-m); line-height: 1.55; }
-.iflv { font-size: 11px; color: var(--text-d); font-style: italic;
-  border-top: 1px solid var(--line); padding-top: 8px; line-height: 1.55; margin-top: 4px; }
-.rb  { display: inline-block; padding: 3px 12px; border-radius: 20px;
-  font-family: 'Cinzel', serif; font-size: 8px; font-weight: 600;
-  letter-spacing: .12em; text-transform: uppercase; margin-bottom: 8px; }
-.rc { background: rgba(100,110,130,.1); color: #8898a8; border: 1px solid rgba(100,110,130,.22); }
-.ru { background: rgba(58,100,180,.1);  color: #7aaaf0; border: 1px solid rgba(58,100,180,.25); }
-.rp { background: rgba(201,168,73,.1);  color: var(--gld-base); border: 1px solid rgba(201,168,73,.25); }
-
-/* MISC */
-.prog-wrap { width:100%;background:var(--bg-m);border-radius:3px;overflow:hidden;height:3px; }
-.prog-fill {
-  height:100%;
-  background: linear-gradient(90deg, var(--gld-mid), var(--gld-base), #d89858);
-  transition: width .4s ease;
-}
-.spin { display:inline-block;width:12px;height:12px;border-radius:50%;
-  border:2px solid var(--line);border-top-color: var(--gld-mid);
-  animation: sp .7s linear infinite; vertical-align:middle; }
-@keyframes sp { to{transform:rotate(360deg)} }
+#hint em { color: var(--gold); font-style: normal; }
 
 </style>
 </head>
 <body>
+
+<!-- FONDOS -->
 <div id="bg"></div>
 <div id="bg-grid"></div>
-<div id="bg-vig"></div>
-<div id="bg-frame"><div class="fc1"></div><div class="fc2"></div></div>
-<div id="toast"></div>
+<div id="bg-vignette"></div>
+<div class="corner c-tl"></div>
+<div class="corner c-tr"></div>
+<div class="corner c-bl"></div>
+<div class="corner c-br"></div>
 
-<!-- DADO 3D -->
-<div id="dice-scene">
-  <div class="d4w" id="d4w">
-    <div class="d4f d4-A" id="d4-main">·</div>
-    <div class="d4f d4-B">·</div>
-    <div class="d4f d4-C">·</div>
-    <div class="d4f d4-D">·</div>
-    <div class="d4f d4-E">·</div>
-    <div class="d4f d4-F">·</div>
-  </div>
-</div>
-<div id="dice-res"></div>
-
-<!-- BANNER -->
-<div id="phase-banner">
-  <div class="pb-t" id="pb-t"></div>
-  <div class="pb-s" id="pb-s"></div>
+<!-- TÍTULO -->
+<div id="title">
+  <h1>STAR CITY</h1>
+  <p>Legends of the Board</p>
+  <div class="rule"><div class="rule-gem"></div></div>
 </div>
 
-<!-- ══ HOME ══ -->
-<div class="screen on" id="s-home">
-  <div class="logo">
-    <span class="logo-main">STAR CITY</span>
-    <span class="logo-sub">Legends of the Board</span>
-    <span class="logo-ver">v2.3 · Sandbox Edition</span>
-    <div class="logo-rule"><div class="logo-rule-gem"></div></div>
-  </div>
-  <div class="sbox">
-    <div class="sdot wait" id="dot-h"></div>
-    <div class="stxt" id="txt-h">Iniciando Sandbox… <span class="spin"></span></div>
-  </div>
-  <button class="btn gold" id="btn-nueva" onclick="go('s-nueva')" disabled>⚔ Nueva Partida (Online)</button>
-  <button class="btn jade"  onclick="go('s-unirse')">🔗 Unirse con Código</button>
-  <div class="divider">modo local</div>
-  <button class="btn ghost" onclick="startSandbox()">▶ Sandbox · 2 jugadores</button>
-</div>
-
-<!-- ══ NUEVA ══ -->
-<div class="screen" id="s-nueva">
-  <button class="back" onclick="go('s-home')">← Volver</button>
-  <div class="logo"><span class="logo-sub" style="font-size:11px;color:var(--gld-base)">Nueva Partida</span></div>
-  <div class="field"><label>Tu nombre</label>
-    <input id="inp-n1" type="text" placeholder="Capitán…" maxlength="20">
-  </div>
-  <div class="divider">elige tu mazo</div>
-  <div class="dgrid" id="dg-nueva"></div>
-  <button class="btn gold" onclick="crearOnline()">Crear Partida →</button>
-</div>
-
-<!-- ══ ESPERA ══ -->
-<div class="screen" id="s-espera">
-  <div class="logo"><span class="logo-sub" style="font-size:10px">Sala de Espera</span></div>
-  <div class="cbox">
-    <div class="cbox-lbl">Comparte este código</div>
-    <div class="cbox-val" id="cod-disp">——</div>
-    <div class="cbox-sub">Caduca al iniciar la partida</div>
-  </div>
-  <div class="sbox"><div class="sdot wait"></div>
-    <div class="stxt">Esperando rival… <span class="spin"></span></div>
-  </div>
-  <button class="btn ghost" onclick="copiarCod()">Copiar código</button>
-  <button class="btn ghost" onclick="go('s-home')">Cancelar</button>
-</div>
-
-<!-- ══ UNIRSE ══ -->
-<div class="screen" id="s-unirse">
-  <button class="back" onclick="go('s-home')">← Volver</button>
-  <div class="logo"><span class="logo-sub" style="font-size:11px;color:var(--gld-base)">Unirse</span></div>
-  <div class="field"><label>Tu nombre</label>
-    <input id="inp-n2" type="text" placeholder="General…" maxlength="20">
-  </div>
-  <div class="field">
-    <label>Código de partida</label>
-    <input id="inp-cod" type="text" placeholder="ABC123" maxlength="6"
-      style="text-transform:uppercase;letter-spacing:.3em;font-size:20px;text-align:center"
-      oninput="this.value=this.value.toUpperCase()">
-  </div>
-  <div class="divider">elige tu mazo</div>
-  <div class="dgrid" id="dg-unirse"></div>
-  <button class="btn jade" onclick="unirseOnline()">Unirse →</button>
-</div>
-
-<!-- ══ CARGANDO ══ -->
-<div class="screen" id="s-load">
-  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;width:100%">
-    <span class="logo-main" style="font-size:26px">STAR CITY</span>
-    <div class="sbox"><div class="sdot wait"></div>
-      <div class="stxt" id="txt-load">Preparando…</div>
-    </div>
-    <div class="prog-wrap"><div class="prog-fill" id="prog" style="width:0%"></div></div>
+<!-- TABLERO -->
+<div id="board-wrap">
+  <div class="iso">
+    <div id="board"></div>
   </div>
 </div>
 
-<!-- ══ JUEGO ══ -->
-<div class="screen" id="s-game">
-
-  <div class="pstrip p2">
-    <div class="pav p2">👤</div>
-    <div class="pinfo">
-      <div class="pname" id="rival-name">Oponente</div>
-      <div class="phpbar"><div class="phpf p2" id="rival-hp" style="width:100%"></div></div>
-      <div class="pstats">
-        <div class="ps">❤️ <b id="rival-hp-v">135</b></div>
-        <div class="ps">🃏 <b id="rival-cards">—</b></div>
-      </div>
-    </div>
-  </div>
-
-  <div id="log">⚔ Selecciona el Castillo en tu mano y toca una casilla dorada.</div>
-
-  <div id="board-vp">
-    <!-- CAPA DE EFECTOS DE COMBATE -->
-    <div id="fx-layer"></div>
-    <!-- TABLERO ISO -->
-    <div class="iso-stage"><div id="board"></div></div>
-  </div>
-
-  <div id="pts">
-    <div class="pa-main">
-      <div class="pa-lbl">PA Disponibles</div>
-      <div class="pa-val" id="pa-val">—</div>
-    </div>
-    <div class="pa-right">
-      <div class="pa-pills">
-        <div class="pill d4">🎲 <b id="d4-v">—</b></div>
-        <div class="pill cas">🏰 <b id="cas-v">3</b></div>
-        <div class="pill cos">🌾 <b id="cos-v">0</b></div>
-      </div>
-      <div class="pa-turn">Turno <b id="turn-v">—</b></div>
-    </div>
-  </div>
-
-  <div id="abar">
-    <button class="btn ghost" style="flex:1;font-size:9px" onclick="pasarTurno()">Pasar</button>
-    <button class="btn gold"  style="flex:2;font-size:11px" id="btn-next" onclick="accion()">Colocar Castillo</button>
-    <button class="btn ghost" style="flex:1;font-size:9px" onclick="colocarCarta()">Colocar</button>
-  </div>
-
-  <div class="pstrip p1">
-    <div class="pav p1">⚔️</div>
-    <div class="pinfo">
-      <div class="pname" id="yo-name">Tú</div>
-      <div class="phpbar"><div class="phpf p1" id="yo-hp" style="width:100%"></div></div>
-      <div class="pstats">
-        <div class="ps">❤️ <b id="yo-hp-v">135</b></div>
-        <div class="ps">🃏 <b id="yo-cards">—</b></div>
-      </div>
-    </div>
-  </div>
-
-  <div id="hand-area">
-    <div class="hand-lbl">Tu mano</div>
-    <div id="hand"></div>
-  </div>
-
+<!-- INFO CELDA -->
+<div id="info">
+  <span>Tablero 15×15</span>
+  <div class="info-sep"></div>
+  <span id="info-cell">Toca una celda</span>
 </div>
 
-<!-- INSPECTOR -->
-<div id="inspector" onclick="if(event.target===this)closeInspector()">
-  <div id="i-card">
-    <button class="ic" onclick="closeInspector()">✕</button>
-    <div id="i-content"></div>
-  </div>
-</div>
+<!-- SELECTOR DE PIEZAS -->
+<div id="pieces-label">Selecciona una pieza</div>
+<div id="pieces-panel"></div>
 
-<!-- CASTLE MODAL -->
-<div id="castle-modal">
-  <div class="cm-box">
-    <div class="cm-title">⚔ Coloca tu Castillo</div>
-    <div class="cm-sub">
-      Toca el Castillo en tu mano, luego toca una casilla dorada
-      dentro de tu mitad del mapa. El Castillo solo puede colocarse
-      en tu zona (P1 → filas 8-14 · P2 → filas 0-6). Al anclarlo,
-      tu área de visión se iluminará y comenzará la partida.
-    </div>
-    <button class="btn gold" onclick="closeCastleModal()">Entendido →</button>
-  </div>
+<!-- HINT -->
+<div id="hint">
+  Selecciona pieza · Toca celda para colocar · Toca pieza colocada para <em>quitar</em>
 </div>
 
 <script>
-/* ════════════════════════════════════════════════════
-   ████████████████████████████████████████████████████
-   ██                                                ██
-   ██   CAMBIAR AQUÍ TU URL DE GOOGLE APPS SCRIPT   ██
-   ██                                                ██
-   ████████████████████████████████████████████████████
-   ════════════════════════════════════════════════════ */
-const WEBAPP_URL = '';   // <── pega tu URL aquí para el modo online
-
-const ONLINE = WEBAPP_URL.length > 10;
-
-/* ════════════════════════════════════════════════════
-   MAZOS
-   ════════════════════════════════════════════════════ */
-const DECKS = [
-  {key:'SECRETOS REALES',    name:'Secretos Reales',    arq:'Medieval',cls:'med',icon:'👑',
-   desc:'Tutores y reyes. Decreto Real + Sombra del Trono.'},
-  {key:'ASEDIO DEL REINO',   name:'Asedio del Reino',   arq:'Medieval',cls:'med',icon:'🏰',
-   desc:'Cañón, Puestos de Avanzada y Guardia Real.'},
-  {key:'FILO DE MEDIANOCHE', name:'Filo de Medianoche', arq:'Samurái', cls:'sam',icon:'🗡️',
-   desc:'Ronin, Wakizashi y Kenzo Hoja Espectral.'},
-  {key:'TORMENTA DEL TRUENO',name:'Tormenta del Trueno',arq:'Samurái', cls:'sam',icon:'⚡',
-   desc:'Raikiri Oni prepara el campo para Rashomon.'},
+/* ═══════════════════════════════════════════════════
+   PIEZAS DISPONIBLES
+   Cambia src por tus imágenes en GitHub Pages.
+   Si la imagen no carga, cae a emoji automáticamente.
+   ═══════════════════════════════════════════════════ */
+const PIECES = [
+  { id:'castillo',   label:'Castillo',       src:'assets/Castillo.jpg',       emoji:'🏰' },
+  { id:'rey',        label:'Rey',             src:'assets/Rey.png',            emoji:'👑' },
+  { id:'jinete',     label:'Jinete Corona',   src:'assets/Jinete_Corona.jpg',  emoji:'🐴' },
+  { id:'torre',      label:'Torre Oscura',    src:'assets/Torre_Oscura.jpg',   emoji:'🗼' },
+  { id:'arroz',      label:'Campo de Arroz',  src:'assets/Campo_Arroz.png',    emoji:'🌾' },
+  { id:'maiz',       label:'Campo de Maíz',   src:'assets/Campo_Maiz.png',     emoji:'🌽' },
 ];
-const DECK_MAP = {
-  'SECRETOS REALES':    ['Rey','Centinela de Plata','Sombra del Trono','Tropa del Rey','Tropa del Rey','Tropa del Rey','Jinete de la Corona','Jinete de la Corona','Heredero de la Corona','Torre Oscura','Puesto de Avanzada','Muralla Fortificada','Decreto Real','Decreto Real','Manto Real','Manto Real','Excalibur','Espada Real','Corona del Rey','Anillo del Rey','Armadura de Combate','Medallon Encantado','Maíz','Maíz','Maíz','Maíz','Maíz','Maíz','Maíz','Maíz','Maíz'],
-  'ASEDIO DEL REINO':   ['Centinela de Plata','Rey','Cañón de Asedio Ligero','Tropa del Rey','Tropa del Rey','Vigía de la Corona','Vigía de la Corona','Guardia Real','Guardia Real','Puesto de Avanzada','Puesto de Avanzada','Muralla Fortificada','Ración de Combate','Ración de Combate','Ración de Combate','Espada Real','Hacha de Fuego y Acero','Estandarte de Guerra','Medallon Encantado','Anillo del Rey','Escudo Anti-Magia','Poción de Flor Azul','Maíz','Maíz','Maíz','Maíz','Maíz','Maíz','Maíz','Maíz','Maíz'],
-  'FILO DE MEDIANOCHE': ['Kenzo Hoja Espectral','Rakegake El Relámpago Rojo','Rashomon Dios Del Trueno','Ronin','Ronin','Wakizashi','Wakizashi','Towamari Ola Danzante','Samurái del Clan Rojo','Pequeño Templo','Pequeño Templo','Puesto de Avanzada','Flechas','Flechas','Flechas','Raikiri','Raikiri','Katana Relámpago','Anillo Brillante','Día de Lluvia','Fogata de Combate','Día de Lluvia','Campos de Arroz','Campos de Arroz','Campos de Arroz','Campos de Arroz','Campos de Arroz','Campos de Arroz','Campos de Arroz','Campos de Arroz','Campos de Arroz'],
-  'TORMENTA DEL TRUENO':['Raikiri Oni','Rakegake El Relámpago Rojo','Rashomon Dios Del Trueno','Towamari Ola Danzante','Tsuki Onna','Tsuki Onna','Ronin','Ronin','Wakizashi','Pequeño Templo','Pequeño Templo','Torre Oscura','Día de Lluvia','Día de Lluvia','Raikiri','Raikiri','Raikiri','Flechas','Flechas','Flechas','Neblina Neón','Fogata de Combate','Campos de Arroz','Campos de Arroz','Campos de Arroz','Campos de Arroz','Campos de Arroz','Campos de Arroz','Campos de Arroz','Campos de Arroz','Campos de Arroz'],
-};
 
-/* ════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════
    ESTADO
-   ════════════════════════════════════════════════════ */
-const APP = {
-  cartas:{}, id:null, jugador:null, mazo:null, nombre:null,
-  deckNueva:null, deckUnirse:null, pollT:null,
-};
-const GS = {
-  turno:0, activo:'p1', fase:'CastlePlacement',
-  pa:{ p1:0, p2:0 }, lastD4:0,
-  piezas:{}, cells:{},
-  mano:{ p1:[], p2:[] }, deck:{ p1:[], p2:[] },
-  lit: new Set(),
-};
-let _selCard=null, _selCell=null, _pid=0;
+   ═══════════════════════════════════════════════════ */
+let selectedPiece = null;        // pieza actualmente seleccionada
+const boardState  = {};           // "r-c" → piece id
 
-/* ════════════════════════════════════════════════════
-   BOOT
-   ════════════════════════════════════════════════════ */
-window.addEventListener('DOMContentLoaded', () => {
-  renderDeckGrids();
-  if (ONLINE) cargarCartasOnline();
-  else {
-    setS('dot-h','txt-h','ok','✓ Modo Sandbox listo');
-    document.getElementById('btn-nueva').disabled = false;
-    setTimeout(startSandbox, 120);
-  }
-});
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState==='visible' && APP.pollT===null && ONLINE)
-    iniciarPollTurno();
-});
+/* ═══════════════════════════════════════════════════
+   BUILD BOARD
+   ═══════════════════════════════════════════════════ */
+function buildBoard() {
+  const board = document.getElementById('board');
+  board.innerHTML = '';
 
-/* ════════════════════════════════════════════════════
-   API JSONP
-   ════════════════════════════════════════════════════ */
-function apiGet(action, params={}) {
-  return new Promise((res,rej) => {
-    const cb = '_sc_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
-    const qs = new URLSearchParams({action,...params,callback:cb});
-    const s  = document.createElement('script');
-    const t  = setTimeout(()=>{clean();rej(new Error('Timeout'));},15000);
-    const clean = ()=>{clearTimeout(t);delete window[cb];s.remove();};
-    window[cb] = d=>{clean();if(!d.ok)rej(new Error(d.error));else res(d.data);};
-    s.src=`${WEBAPP_URL}?${qs}`; s.onerror=()=>{clean();rej(new Error('Network'));};
-    document.head.appendChild(s);
-  });
-}
-async function cargarCartasOnline() {
-  setS('dot-h','txt-h','wait','Conectando… <span class="spin"></span>');
-  try {
-    const data = await apiGet('cartas');
-    (data||[]).filter(c=>c.Nombre).forEach(c=>{APP.cartas[c.Nombre]=c;});
-    setS('dot-h','txt-h','ok',`✓ ${Object.keys(APP.cartas).length} cartas cargadas`);
-    document.getElementById('btn-nueva').disabled = false;
-  } catch(e) {
-    setS('dot-h','txt-h','err','⚠ Sin conexión · Sandbox disponible');
-    document.getElementById('btn-nueva').disabled = false;
+  for (let i = 0; i < 225; i++) {
+    const r = Math.floor(i / 15);
+    const c = i % 15;
+
+    const cell = document.createElement('div');
+    const zone = r < 5 ? 'ze' : r < 10 ? 'zc' : 'zy';
+    cell.className = `cell ${zone}`;
+    cell.dataset.r = r;
+    cell.dataset.c = c;
+
+    cell.addEventListener('click', () => onCellClick(r, c, cell));
+
+    board.appendChild(cell);
   }
 }
 
-/* ════════════════════════════════════════════════════
-   NAV
-   ════════════════════════════════════════════════════ */
-function go(id) {
-  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
-  document.getElementById(id).classList.add('on');
-}
+/* ═══════════════════════════════════════════════════
+   CLICK EN CELDA
+   ═══════════════════════════════════════════════════ */
+function onCellClick(r, c, cell) {
+  const key = `${r}-${c}`;
 
-/* ════════════════════════════════════════════════════
-   DECK GRIDS
-   ════════════════════════════════════════════════════ */
-function renderDeckGrids() {
-  ['nueva','unirse'].forEach(m => {
-    document.getElementById(`dg-${m}`).innerHTML = DECKS.map((d,i) => `
-      <div class="dk ${d.cls}" id="dk-${m}-${i}" onclick="selDeck('${m}',${i},'${d.key}')">
-        <div class="dk-name">${d.icon} ${d.name}</div>
-        <div class="dk-arq ${d.cls}">${d.arq}</div>
-        <div class="dk-desc">${d.desc}</div>
-        <div class="dk-chk">✦</div>
-      </div>`).join('');
-  });
-}
-function selDeck(m,i,key) {
-  document.querySelectorAll(`#dg-${m} .dk`).forEach(d=>d.classList.remove('sel'));
-  document.getElementById(`dk-${m}-${i}`).classList.add('sel');
-  if(m==='nueva') APP.deckNueva=key; else APP.deckUnirse=key;
-}
-
-/* ════════════════════════════════════════════════════
-   SANDBOX
-   ════════════════════════════════════════════════════ */
-function startSandbox() {
-  APP.jugador='p1'; APP.mazo='SECRETOS REALES'; APP.nombre='Capitán';
-  iniciarJuego();
-}
-
-/* ════════════════════════════════════════════════════
-   ONLINE crear / unirse
-   ════════════════════════════════════════════════════ */
-async function crearOnline() {
-  if(!ONLINE){toast('Configura WEBAPP_URL primero','err');return;}
-  const nombre=document.getElementById('inp-n1').value.trim()||'J1';
-  if(!APP.deckNueva){toast('Elige un mazo','err');return;}
-  APP.id=genCod(); APP.jugador='p1'; APP.mazo=APP.deckNueva; APP.nombre=nombre;
-  document.getElementById('cod-disp').textContent=APP.id;
-  go('s-espera');
-  try{ await apiGet('nueva_partida',{id:APP.id,mazo_j1:APP.mazo,jugador_j1:nombre}); toast('Partida creada ✓','ok'); }
-  catch(e){ toast('Error: '+e.message,'err'); }
-  iniciarPollLobby();
-}
-async function unirseOnline() {
-  if(!ONLINE){toast('Configura WEBAPP_URL primero','err');return;}
-  const nombre=document.getElementById('inp-n2').value.trim()||'J2';
-  const cod=document.getElementById('inp-cod').value.trim().toUpperCase();
-  if(cod.length!==6){toast('Código de 6 caracteres','err');return;}
-  if(!APP.deckUnirse){toast('Elige un mazo','err');return;}
-  APP.id=cod; APP.jugador='p2'; APP.mazo=APP.deckUnirse; APP.nombre=nombre;
-  try{ await apiGet('unirse',{id:cod,mazo_j2:APP.mazo,jugador_j2:nombre}); toast('¡Unido!','ok'); iniciarJuego(); }
-  catch(e){ toast('Error: '+e.message,'err'); }
-}
-function iniciarPollLobby() {
-  stopPoll();
-  APP.pollT=setInterval(async()=>{
-    try{const d=await apiGet('lobby',{id:APP.id});if(d&&d.Estado==='en_curso'){stopPoll();toast('¡Rival unido!','ok');setTimeout(iniciarJuego,700);}}catch(e){}
-  },9000);
-}
-function stopPoll(){if(APP.pollT){clearInterval(APP.pollT);APP.pollT=null;}}
-
-/* ════════════════════════════════════════════════════
-   INICIAR JUEGO
-   ════════════════════════════════════════════════════ */
-async function iniciarJuego() {
-  go('s-load'); setProg(10,'Preparando tablero…');
-  await sleep(150); setProg(38,'Armando mazos…');
-
-  const arq = DECKS.find(d=>d.key===APP.mazo)?.arq||'Medieval';
-  const cas  = makeCastle(arq);
-  const cas2 = makeCastle(arq==='Medieval'?'Samurái':'Medieval');
-
-  initDeck('p1', APP.mazo);
-  initDeck('p2', APP.mazo==='SECRETOS REALES'?'FILO DE MEDIANOCHE':'ASEDIO DEL REINO');
-
-  await sleep(150); setProg(68,'Repartiendo mano…');
-  dealHand('p1', cas); dealHand('p2', cas2);
-
-  await sleep(150); setProg(100,'¡Que comience!'); await sleep(340);
-
-  document.getElementById('yo-name').textContent    = APP.nombre||'Capitán';
-  document.getElementById('rival-name').textContent = 'Rival';
-
-  buildBoard();
-  go('s-game');
-  startCastlePlacement();
-}
-
-/* ════════════════════════════════════════════════════
-   FASE 0 — COLOCACIÓN CASTILLO
-   ════════════════════════════════════════════════════ */
-function startCastlePlacement() {
-  GS.fase = 'CastlePlacement';
-  showCastleZone('p1');
-  document.getElementById('castle-modal').classList.add('on');
-  const btn = document.getElementById('btn-next');
-  btn.textContent = 'Esperando Castillo…'; btn.disabled = true;
-  log('⚔ Selecciona el Castillo en tu mano, luego toca una casilla dorada.');
-}
-
-function showCastleZone(player) {
-  clearOvs();
-  const rows = player==='p1' ? [8,9,10,11,12,13,14] : [0,1,2,3,4,5,6];
-  rows.forEach(r => { for(let c=0;c<15;c++) {
-    const cell = getCell(r,c); if(!cell) return;
-    cell.classList.remove('fog'); cell.classList.add('lit');
-    if(!GS.cells[`${r}-${c}`]) cell.classList.add('v-castle');
-  }});
-}
-
-function closeCastleModal() {
-  document.getElementById('castle-modal').classList.remove('on');
-}
-
-/* ════════════════════════════════════════════════════
-   ACCIÓN PRINCIPAL (botón central)
-   ════════════════════════════════════════════════════ */
-async function accion() {
-  if (GS.fase==='CastlePlacement'||GS.fase==='Esperando_D4') {
-    if (GS.fase==='CastlePlacement') { toast('Primero coloca tu Castillo','err'); return; }
-    const btn = document.getElementById('btn-next');
-    btn.disabled = true;
-    const d4 = await rollDice();
-    startTurn(GS.activo, d4);
-    btn.disabled = false;
-  } else {
-    const btn = document.getElementById('btn-next');
-    btn.disabled = true;
-    const d4 = await rollDice();
-    if (ONLINE) await guardarTurno();
-    startTurn(GS.activo, d4);
-    btn.disabled = false;
-  }
-}
-
-function startTurn(player, d4) {
-  GS.activo = player; GS.fase = 'Movimiento'; GS.turno++;
-  GS.lastD4 = d4;
-  const arroz = cntArroz(player);
-  const pa    = d4 + 3 + arroz;
-  GS.pa[player] = pa;
-  updatePA(d4, 3, arroz, pa);
-  document.getElementById('turn-v').textContent = GS.turno;
-
-  // robo carta con animación
-  const drawn = GS.deck[player].shift();
-  if (drawn) { GS.mano[player].push(drawn); renderHand(drawn.name); }
-  else renderHand();
-
-  updateHP(); clearOvs();
-  const btn = document.getElementById('btn-next');
-  btn.textContent = '▶ Siguiente turno'; btn.disabled = false;
-  banner(`Turno ${GS.turno}`, `${pa} PA disponibles`);
-  log(`🎲 D4 = <em>${d4}</em> + 🏰 3 + 🌾 ${arroz} = <em>${pa} PA</em>${drawn?` · Robaste <strong>${drawn.name}</strong>`:''}`);
-}
-
-function pasarTurno() {
-  GS.pa[GS.activo] = 0;
-  updatePA(GS.lastD4, 3, cntArroz(GS.activo), 0);
-  log('Turno pasado.');
-}
-
-/* ════════════════════════════════════════════════════
-   COLOCAR CARTA
-   ════════════════════════════════════════════════════ */
-function colocarCarta() {
-  if (!_selCard) { log('Selecciona una carta de tu mano.'); return; }
-  if (!_selCell) { log('Selecciona una casilla.'); return; }
-  const {r,c}=_selCell, key=`${r}-${c}`;
-  if (GS.cells[key]) { log('Casilla ocupada.'); return; }
-
-  // FASE CASTILLO
-  if (GS.fase==='CastlePlacement') {
-    const ok = GS.activo==='p1' ? r>=8 : r<=6;
-    if (!ok) { log('Solo en tu mitad del mapa (casillas doradas).'); return; }
-    const isCas = (_selCard.subtype||'').toLowerCase().includes('principal')
-               || (_selCard.name||'').toLowerCase().includes('castillo');
-    if (!isCas) { log('Solo puedes colocar el Castillo en esta fase.'); return; }
-
-    placePiece(_selCard, r, c, GS.activo, true);
-    clearOvs();
-    iluminar(r, c, _selCard.vis||3);
-    removeMano(_selCard); _selCard=null; clearCellSel();
-    renderHand(); updateHP();
-    GS.fase = 'Esperando_D4';
-
-    const btn = document.getElementById('btn-next');
-    btn.textContent = '▶ Lanzar D4'; btn.disabled = false;
-    banner('¡Castillo Anclado!','Lanza el dado para comenzar');
-    log('Castillo colocado · Zona iluminada · Pulsa <strong>Lanzar D4</strong>.');
+  // Si ya tiene pieza → quitarla
+  if (boardState[key]) {
+    delete boardState[key];
+    cell.classList.remove('active', 'sel');
+    cell.querySelectorAll('.piece').forEach(e => e.remove());
+    setInfo(`Celda (${c+1},${r+1}) vaciada`);
     return;
   }
 
-  // TURNO NORMAL
-  const enZona = GS.activo==='p1' ? r>=8 : r<=6;
-  if (!enZona) { log('Solo en tu zona del mapa.'); return; }
-  if (!GS.lit.has(key)) { log('Solo en casillas iluminadas.'); return; }
-  const coste = _selCard.cost||0;
-  if (GS.pa[GS.activo] < coste) { log(`PA insuficientes · Necesitas <em>${coste}</em>, tienes <em>${GS.pa[GS.activo]}</em>.`); return; }
+  // Si hay pieza seleccionada → colocarla
+  if (selectedPiece) {
+    boardState[key] = selectedPiece.id;
+    renderPiece(cell, selectedPiece);
+    setInfo(`${selectedPiece.label} en (${c+1},${r+1})`);
+    return;
+  }
 
-  placePiece(_selCard, r, c, GS.activo, false);
-  GS.pa[GS.activo] -= coste;
-  if (_selCard.isHarvest) iluminar(r, c, 1);
-  removeMano(_selCard); _selCard=null; clearCellSel();
-  renderHand();
-  updatePA(GS.lastD4, 3, cntArroz(GS.activo), GS.pa[GS.activo]);
-  const p = GS.piezas[GS.cells[key]];
-  log(`<strong>${p.card.name}</strong> colocado en (${c+1},${r+1}) · <em>${GS.pa[GS.activo]} PA</em>.`);
+  // Sin pieza seleccionada → solo info
+  setInfo(`Celda (${c+1},${r+1}) · zona ${r < 5 ? 'rival' : r < 10 ? 'centro' : 'jugador'}`);
 }
-</script></body></html>
+
+/* ═══════════════════════════════════════════════════
+   RENDER PIEZA EN CELDA
+   ═══════════════════════════════════════════════════ */
+function renderPiece(cell, piece) {
+  // limpiar pieza anterior si existe
+  cell.querySelectorAll('.piece').forEach(e => e.remove());
+  cell.classList.add('active');
+
+  const wrap = document.createElement('div');
+  wrap.className = 'piece';
+
+  const img = document.createElement('img');
+  img.alt = piece.label;
+
+  // intenta cargar la imagen real; si falla → emoji
+  img.src = piece.src;
+  img.onerror = () => {
+    wrap.removeChild(img);
+    const span = document.createElement('span');
+    span.style.cssText = `
+      font-size: calc(var(--cs) * .78);
+      line-height: 1; margin-bottom: 1px;
+      filter: drop-shadow(0 0 8px rgba(201,168,73,.6))
+              drop-shadow(1px -2px 0 rgba(0,0,0,.7))
+              drop-shadow(2px 4px 0 rgba(0,0,0,.6));
+    `;
+    span.textContent = piece.emoji;
+    wrap.appendChild(span);
+  };
+
+  wrap.appendChild(img);
+  cell.appendChild(wrap);
+}
+
+/* ═══════════════════════════════════════════════════
+   SELECTOR DE PIEZAS
+   ═══════════════════════════════════════════════════ */
+function buildPiecesPanel() {
+  const panel = document.getElementById('pieces-panel');
+  panel.innerHTML = '';
+
+  PIECES.forEach(piece => {
+    const btn = document.createElement('div');
+    btn.className = 'piece-btn';
+    btn.title = piece.label;
+
+    // intenta mostrar imagen; si falla → emoji
+    const img = document.createElement('img');
+    img.src = piece.src;
+    img.alt = piece.label;
+    img.onerror = () => {
+      btn.removeChild(img);
+      const em = document.createElement('span');
+      em.className = 'emo';
+      em.textContent = piece.emoji;
+      btn.appendChild(em);
+    };
+    btn.appendChild(img);
+
+    btn.addEventListener('click', () => selectPiece(piece, btn));
+    panel.appendChild(btn);
+  });
+}
+
+function selectPiece(piece, btn) {
+  // toggle: si ya estaba seleccionada, deseleccionar
+  if (selectedPiece && selectedPiece.id === piece.id) {
+    selectedPiece = null;
+    document.querySelectorAll('.piece-btn').forEach(b => b.classList.remove('sel-piece'));
+    setInfo('Toca una celda');
+    return;
+  }
+
+  selectedPiece = piece;
+  document.querySelectorAll('.piece-btn').forEach(b => b.classList.remove('sel-piece'));
+  btn.classList.add('sel-piece');
+  setInfo(`${piece.label} seleccionado · toca una celda`);
+}
+
+/* ═══════════════════════════════════════════════════
+   INFO
+   ═══════════════════════════════════════════════════ */
+function setInfo(msg) {
+  document.getElementById('info-cell').textContent = msg;
+}
+
+/* ═══════════════════════════════════════════════════
+   INIT
+   ═══════════════════════════════════════════════════ */
+buildBoard();
+buildPiecesPanel();
+</script>
+</body>
+</html>
