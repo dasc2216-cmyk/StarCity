@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta name="theme-color" content="#04050a">
+<title>Star City</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* ════════════════════════════════════════════════
+   STAR CITY — Pantalla de Inicio + Lobby Online
+   ════════════════════════════════════════════════ */
+
+/* ── CAMBIAR AQUÍ LA URL DEL APPS SCRIPT ── */
+/* (también está abajo en el JS)             */
+
+:root {
+  --bg:     #04050a;
+  --bg-m:   #0f1118;
+  --bg-l:   #171c28;
+  --line:   #1e2230;
+  --line2:  #303650;
+  --gold:   #c9a849;
+  --gold-b: #f0d878;
+  --gold-d: #6a5018;
+  --copper: #b87840;
+  --jade:   #587860;
+  --jade-b: #78a888;
+  --text:   #e8e3d4;
+  --text-m: #8a8478;
+  --text-d: #3e3c36;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  height: 100%; overflow: hidden;
+  background: var(--bg);
+  font-family: 'Cinzel', serif;
+  color: var(--text);
+  touch-action: manipulation;
+}
+body {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 20px;
+}
+
+/* FONDO */
+#bg {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse 140% 60% at 50% 0%,
+      rgba(201,168,73,.07) 0%, transparent 55%),
+    radial-gradient(ellipse 80% 80% at 15% 85%,
+      rgba(40,80,160,.04) 0%, transparent 50%),
+    radial-gradient(ellipse 80% 80% at 85% 85%,
+      rgba(160,30,30,.04) 0%, transparent 50%);
+}
+#bg-grid {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image:
+    linear-gradient(rgba(201,168,73,.014) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(201,168,73,.014) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+#bg-vig {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background: radial-gradient(ellipse at 50% 50%, transparent 20%, rgba(0,0,0,.93) 100%);
+}
+.corner {
+  position: fixed; width: 32px; height: 32px; z-index: 0; pointer-events: none;
+}
+.corner::before, .corner::after { content: ''; position: absolute; background: rgba(201,168,73,.2); }
+.corner::before { width: 100%; height: 1px; top: 0; left: 0; }
+.corner::after  { width: 1px; height: 100%; top: 0; left: 0; }
+.c-tl { top: 12px; left: 12px; }
+.c-tr { top: 12px; right: 12px; transform: scaleX(-1); }
+.c-bl { bottom: 12px; left: 12px; transform: scaleY(-1); }
+.c-br { bottom: 12px; right: 12px; transform: scale(-1); }
+
+/* CONTENIDO */
+#wrap {
+  position: relative; z-index: 1;
+  width: 100%; max-width: 400px;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 12px;
+}
+
+/* LOGO */
+.logo-main {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: clamp(28px, 8vw, 48px);
+  font-weight: 700; letter-spacing: .14em;
+  background: linear-gradient(160deg,
+    #4a3810 0%, #8a6820 14%, #c9a849 30%,
+    #f0d878 45%, #fff8e0 50%,
+    #f0d878 55%, #c9a849 70%,
+    #8a6820 86%, #4a3810 100%);
+  -webkit-background-clip: text; background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 20px rgba(201,168,73,.3));
+  text-align: center; line-height: 1.1;
+}
+.logo-sub {
+  font-size: clamp(8px, 2vw, 11px);
+  letter-spacing: .55em; color: rgba(201,168,73,.45);
+  text-transform: uppercase; text-align: center;
+  margin-top: 2px;
+}
+.logo-ver {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px; color: var(--text-d);
+  letter-spacing: .2em; text-align: center;
+}
+.rule {
+  display: flex; align-items: center; gap: 6px;
+  width: 70%; margin: 2px auto;
+}
+.rule::before, .rule::after {
+  content: ''; flex: 1; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(201,168,73,.3), transparent);
+}
+.rule-gem {
+  width: 5px; height: 5px;
+  background: rgba(201,168,73,.45); transform: rotate(45deg);
+}
+
+/* STATUS */
+#status-box {
+  width: 100%;
+  background: var(--bg-m); border: 1px solid var(--line);
+  border-radius: 6px; padding: 10px 14px;
+  display: flex; align-items: center; gap: 9px;
+}
+.sdot {
+  width: 8px; height: 8px; border-radius: 50%;
+  flex-shrink: 0; background: var(--text-d); transition: background .3s;
+}
+.sdot.wait { background: var(--gold); animation: dp 1.4s ease-in-out infinite; }
+.sdot.ok   { background: #448866; }
+.sdot.err  { background: #884444; }
+@keyframes dp { 0%,100%{opacity:1} 50%{opacity:.2} }
+#status-txt { font-size: 11px; color: var(--text-m); line-height: 1.4; }
+
+/* DIVIDER */
+.div {
+  width: 100%; display: flex; align-items: center; gap: 8px;
+  font-size: 8px; letter-spacing: .18em; text-transform: uppercase; color: var(--text-d);
+}
+.div::before, .div::after {
+  content: ''; flex: 1; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--line2), transparent);
+}
+
+/* BOTONES */
+.btn {
+  width: 100%; padding: 13px;
+  border-radius: 6px; border: 1px solid var(--line2);
+  background: linear-gradient(160deg, var(--bg-l), var(--bg-m));
+  color: var(--text-m);
+  font-family: 'Cinzel', serif; font-size: 12px;
+  font-weight: 600; letter-spacing: .12em; text-transform: uppercase;
+  cursor: pointer; transition: all .2s; position: relative; overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,.04), transparent 60%);
+  pointer-events: none;
+}
+.btn:active { transform: scale(.97); }
+.btn.gold {
+  border-color: rgba(201,168,73,.45);
+  background: linear-gradient(160deg, rgba(201,168,73,.14), rgba(201,168,73,.05));
+  color: var(--gold-b);
+  box-shadow: 0 0 28px rgba(201,168,73,.08);
+}
+.btn.gold:hover { background: linear-gradient(160deg, rgba(201,168,73,.22), rgba(201,168,73,.09)); }
+.btn.jade {
+  border-color: rgba(88,120,96,.5);
+  background: linear-gradient(160deg, rgba(88,120,96,.14), rgba(88,120,96,.05));
+  color: var(--jade-b);
+}
+.btn.sand {
+  background: transparent; border-color: var(--line);
+  color: var(--text-d); font-size: 10px; padding: 9px;
+}
+.btn:disabled { opacity: .25; pointer-events: none; }
+
+/* INPUTS */
+.field { width: 100%; display: flex; flex-direction: column; gap: 4px; }
+.field label {
+  font-size: 8px; letter-spacing: .18em; text-transform: uppercase; color: var(--text-d);
+}
+.field input {
+  width: 100%; padding: 10px 13px;
+  border-radius: 5px; border: 1px solid var(--line);
+  background: var(--bg-m); color: var(--text);
+  font-family: 'JetBrains Mono', monospace; font-size: 14px;
+  outline: none; transition: all .2s; -webkit-appearance: none;
+}
+.field input:focus { border-color: rgba(201,168,73,.4); box-shadow: 0 0 0 3px rgba(201,168,73,.06); }
+.field input::placeholder { color: var(--text-d); }
+
+/* CÓDIGO BOX */
+#cod-box {
+  width: 100%;
+  background: linear-gradient(135deg, var(--bg-m), var(--bg));
+  border: 1px solid rgba(201,168,73,.3); border-radius: 8px;
+  padding: 18px; text-align: center;
+  box-shadow: 0 0 40px rgba(201,168,73,.05);
+  display: none;
+}
+#cod-box.on { display: block; }
+#cod-lbl { font-size: 8px; letter-spacing: .2em; text-transform: uppercase; color: var(--text-d); margin-bottom: 8px; }
+#cod-val {
+  font-family: 'JetBrains Mono', monospace; font-size: 36px;
+  font-weight: 700; color: var(--gold); letter-spacing: .32em;
+  text-shadow: 0 0 20px rgba(201,168,73,.45);
+}
+#cod-sub { font-size: 10px; color: var(--text-d); margin-top: 6px; font-style: italic; }
+
+/* TOAST */
+#toast {
+  position: fixed; bottom: 20px; left: 50%;
+  transform: translateX(-50%) translateY(14px);
+  background: rgba(15,17,24,.96); backdrop-filter: blur(8px);
+  border: 1px solid var(--line2); border-radius: 7px;
+  padding: 9px 20px; font-size: 11px; letter-spacing: .06em;
+  color: var(--text-m); white-space: nowrap;
+  opacity: 0; pointer-events: none; z-index: 999; transition: all .25s;
+}
+#toast.on  { opacity: 1; transform: translateX(-50%) translateY(0); }
+#toast.ok  { border-color: rgba(68,136,102,.5); color: #68c888; }
+#toast.err { border-color: rgba(136,68,68,.5);  color: #c88888; }
+
+.spin {
+  display: inline-block; width: 11px; height: 11px; border-radius: 50%;
+  border: 2px solid var(--line); border-top-color: var(--copper);
+  animation: sp .7s linear infinite; vertical-align: middle;
+}
+@keyframes sp { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div id="bg"></div>
+<div id="bg-grid"></div>
+<div id="bg-vig"></div>
+<div class="corner c-tl"></div>
+<div class="corner c-tr"></div>
+<div class="corner c-bl"></div>
+<div class="corner c-br"></div>
+<div id="toast"></div>
+
+<div id="wrap">
+
+  <!-- LOGO -->
+  <div class="logo-main">STAR CITY</div>
+  <div class="logo-sub">Legends of the Board</div>
+  <div class="rule"><div class="rule-gem"></div></div>
+  <div class="logo-ver">v1.0 · by Star City Studio</div>
+
+  <!-- STATUS -->
+  <div id="status-box">
+    <div class="sdot wait" id="sdot"></div>
+    <div id="status-txt">Verificando conexión… <span class="spin"></span></div>
+  </div>
+
+  <!-- BOTÓN SANDBOX -->
+  <button class="btn sand" onclick="irSandbox()">▶ Jugar en este dispositivo (Sandbox)</button>
+
+  <div class="div">multijugador online</div>
+
+  <!-- NUEVA PARTIDA -->
+  <div class="field">
+    <label>Tu nombre</label>
+    <input id="inp-nombre" type="text" placeholder="Capitán…" maxlength="20">
+  </div>
+
+  <button class="btn gold" id="btn-nueva" onclick="crearPartida()">⚔ Nueva Partida Online</button>
+
+  <!-- CÓDIGO GENERADO -->
+  <div id="cod-box">
+    <div id="cod-lbl">Comparte este código con tu rival</div>
+    <div id="cod-val">——</div>
+    <div id="cod-sub">Esperando rival… <span class="spin"></span></div>
+    <button class="btn sand" style="margin-top:10px;font-size:9px" onclick="copiarCodigo()">Copiar código</button>
+  </div>
+
+  <div class="div">o únete</div>
+
+  <!-- UNIRSE -->
+  <div class="field">
+    <label>Código de partida</label>
+    <input id="inp-codigo" type="text" placeholder="ABC123" maxlength="6"
+      style="text-transform:uppercase;letter-spacing:.3em;font-size:20px;text-align:center"
+      oninput="this.value=this.value.toUpperCase()">
+  </div>
+  <button class="btn jade" onclick="unirsePartida()">🔗 Unirse con Código</button>
+
+</div>
+
+<script>
+/* ════════════════════════════════════════════════
+   ████████████████████████████████████████████████
+   ██                                            ██
+   ██   CAMBIAR AQUÍ TU URL DE APPS SCRIPT       ██
+   ██                                            ██
+   ████████████████████████████████████████████████
+   ════════════════════════════════════════════════ */
+const WEBAPP = 'https://script.google.com/macros/s/AKfycbz_wj4rjKkltB_PaJk2cunhFh3JxYKcgeU_cBV7T8F9xHOL9QjJVHnUhr_EqI8Ma6I3/exec';
+
+/* URL del juego (mismo repo) */
+const GAME_URL = 'StarCity.html';
+
+/* ════════════════════════════════════════════════
+   ESTADO
+   ════════════════════════════════════════════════ */
+let pollTimer = null;
+let idPartida = null;
+
+/* ════════════════════════════════════════════════
+   BOOT
+   ════════════════════════════════════════════════ */
+window.addEventListener('DOMContentLoaded', () => {
+  ping();
+});
+
+async function ping() {
+  try {
+    await netGet('ping');
+    setStatus('ok', '✓ Servidor conectado · Listo para jugar');
+  } catch(e) {
+    setStatus('err', '⚠ Sin conexión al servidor · Solo Sandbox disponible');
+  }
+}
+
+/* ════════════════════════════════════════════════
+   API JSONP
+   ════════════════════════════════════════════════ */
+function netGet(action, params) {
+  params = params || {};
+  return new Promise((resolve, reject) => {
+    const cb  = '_sc_' + Date.now() + '_' + Math.random().toString(36).slice(2,6);
+    params.action   = action;
+    params.callback = cb;
+    const qs = new URLSearchParams(params).toString();
+    const s  = document.createElement('script');
+    const t  = setTimeout(() => { cleanup(); reject(new Error('Timeout')); }, 15000);
+    const cleanup = () => { clearTimeout(t); delete window[cb]; s.remove(); };
+    window[cb] = d => { cleanup(); if (!d.ok) reject(new Error(d.error || 'Error')); else resolve(d.data); };
+    s.src = WEBAPP + '?' + qs;
+    s.onerror = () => { cleanup(); reject(new Error('Network error')); };
+    document.head.appendChild(s);
+  });
+}
+
+/* ════════════════════════════════════════════════
+   SANDBOX — abre StarCity.html directo
+   ════════════════════════════════════════════════ */
+function irSandbox() {
+  window.location.href = GAME_URL;
+}
+
+/* ════════════════════════════════════════════════
+   NUEVA PARTIDA
+   ════════════════════════════════════════════════ */
+async function crearPartida() {
+  const nombre = document.getElementById('inp-nombre').value.trim() || 'Jugador 1';
+  const id     = genCod();
+  idPartida    = id;
+
+  document.getElementById('btn-nueva').disabled = true;
+  setStatus('wait', 'Creando partida… <span class="spin"></span>');
+
+  try {
+    await netGet('nueva_partida', { id, mazo_j1: 'Medieval', jugador_j1: nombre });
+
+    // Mostrar código
+    document.getElementById('cod-val').textContent = id;
+    document.getElementById('cod-box').classList.add('on');
+    setStatus('ok', '✓ Partida creada · Esperando rival');
+    toast('Comparte el código: ' + id, 'ok');
+
+    // Polling esperando J2
+    pollTimer = setInterval(async () => {
+      try {
+        const d = await netGet('lobby', { id });
+        if (d && d.Estado === 'en_curso') {
+          clearInterval(pollTimer);
+          toast('¡Rival conectado! Iniciando…', 'ok');
+          setTimeout(() => {
+            irJuego({ id, jugador: 'p1', nombre, rival: d.Jugador_J2 || 'Rival' });
+          }, 800);
+        }
+      } catch(e) { /* silencioso */ }
+    }, 9000);
+
+  } catch(e) {
+    setStatus('err', '⚠ Error: ' + e.message);
+    document.getElementById('btn-nueva').disabled = false;
+    toast('Error al crear partida: ' + e.message, 'err');
+  }
+}
+
+/* ════════════════════════════════════════════════
+   UNIRSE
+   ════════════════════════════════════════════════ */
+async function unirsePartida() {
+  const nombre  = document.getElementById('inp-nombre').value.trim() || 'Jugador 2';
+  const codigo  = document.getElementById('inp-codigo').value.trim().toUpperCase();
+
+  if (codigo.length !== 6) { toast('El código debe tener 6 caracteres', 'err'); return; }
+
+  setStatus('wait', 'Uniéndose a ' + codigo + '… <span class="spin"></span>');
+
+  try {
+    await netGet('unirse', { id: codigo, mazo_j2: 'Samurai', jugador_j2: nombre });
+    toast('¡Unido! Iniciando partida…', 'ok');
+    setTimeout(() => {
+      irJuego({ id: codigo, jugador: 'p2', nombre, rival: 'Rival' });
+    }, 600);
+  } catch(e) {
+    setStatus('err', '⚠ ' + e.message);
+    toast('Error: ' + e.message, 'err');
+  }
+}
+
+/* ════════════════════════════════════════════════
+   IR AL JUEGO
+   Pasa los parámetros via URL para que StarCity.html
+   los recoja y arranque en modo online.
+   ════════════════════════════════════════════════ */
+function irJuego(params) {
+  const qs = new URLSearchParams({
+    id:      params.id,
+    jugador: params.jugador,
+    nombre:  params.nombre,
+    rival:   params.rival,
+    webapp:  WEBAPP,
+  }).toString();
+  window.location.href = GAME_URL + '?' + qs;
+}
+
+/* ════════════════════════════════════════════════
+   UTILIDADES
+   ════════════════════════════════════════════════ */
+function genCod() {
+  const c = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  return Array.from({ length: 6 }, () => c[Math.floor(Math.random() * c.length)]).join('');
+}
+
+function setStatus(state, msg) {
+  const dot = document.getElementById('sdot');
+  const txt = document.getElementById('status-txt');
+  dot.className = 'sdot ' + state;
+  txt.innerHTML = msg;
+}
+
+function copiarCodigo() {
+  const val = document.getElementById('cod-val').textContent;
+  navigator.clipboard?.writeText(val)
+    .then(() => toast('Código copiado: ' + val, 'ok'))
+    .catch(() => toast(val, 'ok'));
+}
+
+let _tt;
+function toast(msg, type) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'on ' + (type || '');
+  clearTimeout(_tt);
+  _tt = setTimeout(() => el.className = '', 3200);
+}
+</script>
+</body>
+</html>
