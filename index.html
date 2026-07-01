@@ -565,7 +565,7 @@ body{font-family:'Spectral',serif;color:var(--text);display:flex;flex-direction:
 /* ══════════════════════════════════════════
    CONFIG
 ══════════════════════════════════════════ */
-const API = 'https://script.google.com/macros/s/AKfycby0XFFMM50cAiPaTX7rEA-fj6_B8IhW4ZInizS7h227ejKwh6sT6S3rnlCeS88kPIc2/exec';
+const API = 'https://script.google.com/macros/s/AKfycbyyGvEB9M4wnvgiDmzQF-LjDKO3NZ3nT3cwdeXeI3f0xASq4Xg4YuS9x4rLJumruACY/exec';
 
 /* ══ MAZOS ════════════════════════════════ */
 const DECKS = [
@@ -640,12 +640,28 @@ async function cargarCartas() {
 }
 
 /* ══ API ════════════════════════════════════ */
-async function apiGet(action, params={}) {
-  const qs  = new URLSearchParams({ action, ...params });
-  const res = await fetch(`${API}?${qs}`, { redirect:'follow' });
-  const txt = await res.text();
-  try { const j = JSON.parse(txt); if (!j.ok) throw new Error(j.error); return j.data; }
-  catch(e) { throw new Error('API: ' + txt.slice(0,80)); }
+function apiGet(action, params={}) {
+  return new Promise((resolve, reject) => {
+    const cbName = '_sc_cb_' + Date.now();
+    const qs = new URLSearchParams({ action, ...params, callback: cbName });
+    const script = document.createElement('script');
+    const timer = setTimeout(() => {
+      cleanup(); reject(new Error('Timeout conectando al servidor'));
+    }, 12000);
+    function cleanup() {
+      clearTimeout(timer);
+      delete window[cbName];
+      if (script.parentNode) script.parentNode.removeChild(script);
+    }
+    window[cbName] = function(data) {
+      cleanup();
+      if (!data.ok) reject(new Error(data.error || 'API error'));
+      else resolve(data.data);
+    };
+    script.src = `${API}?${qs}`;
+    script.onerror = () => { cleanup(); reject(new Error('Failed to load')); };
+    document.head.appendChild(script);
+  });
 }
 
 /* ══ NAV ════════════════════════════════════ */
