@@ -565,7 +565,7 @@ body{font-family:'Spectral',serif;color:var(--text);display:flex;flex-direction:
 /* ══════════════════════════════════════════
    CONFIG
 ══════════════════════════════════════════ */
-const API = 'https://script.google.com/macros/s/AKfycbyyGvEB9M4wnvgiDmzQF-LjDKO3NZ3nT3cwdeXeI3f0xASq4Xg4YuS9x4rLJumruACY/exec';
+const API = 'https://script.google.com/macros/s/AKfycbz_ZMMsAdqRx7a6Cyt8kj2IXvdV9KQ6n5IHUYwJljh8CvsZluNzGFV9wx_b0ShLQ87c/exec';
 
 /* ══ MAZOS ════════════════════════════════ */
 const DECKS = [
@@ -900,14 +900,57 @@ function startPlayerTurn(player) {
   clearOverlays();
 }
 
-function siguienteTurno() {
-  if (APP.local) {
-    // modo local: pasa al oponente y luego vuelve
-    startPlayerTurn('p1');
-    return;
+async function siguienteTurno() {
+  const btn = document.getElementById('btn-next');
+  btn.disabled = true;
+
+  // 1. Animacion dado
+  const d4 = Math.floor(Math.random() * 4) + 1;
+  GS.lastD4 = d4;
+  await animarDado(d4);
+
+  // 2. Robar carta
+  const drawn = GS.mazo[GS.activo].shift();
+  if (drawn) GS.mano[GS.activo].push(drawn);
+
+  // 3. Calcular PA
+  const arroz = countArroz(GS.activo);
+  const pa    = d4 + 3 + arroz;
+  GS.paCurrent[GS.activo] = pa;
+  GS.arroz[GS.activo]     = arroz;
+  GS.turn++;
+
+  updateHUD();
+  renderHand();
+
+  setLog(`🎲 D4 = <em>${d4}</em> + 3 castillo + ${arroz} cosecha = <em>${pa} PA</em>${drawn ? ' · Robaste <strong>' + drawn.name + '</strong>' : ''}`);
+
+  // 4. Guardar en Sheets
+  if (!APP.local) {
+    await guardarTurnoOnline();
   }
-  // online: guarda y espera
-  guardarTurnoOnline();
+
+  btn.disabled = false;
+  btn.textContent = '▶ Turno ' + GS.turn;
+}
+
+function animarDado(val) {
+  return new Promise(res => {
+    const faces = ['','⚀','⚁','⚂','⚃'];
+    const el = document.createElement('div');
+    el.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0.3);font-size:72px;z-index:500;transition:none;pointer-events:none;text-shadow:0 0 30px rgba(201,164,73,.9)';
+    el.textContent = faces[val] || '🎲';
+    document.body.appendChild(el);
+    requestAnimationFrame(() => {
+      el.style.transition = 'transform .4s cubic-bezier(.17,.67,.35,1.3), opacity .6s ease';
+      el.style.transform  = 'translate(-50%,-50%) scale(1.1)';
+      setTimeout(() => {
+        el.style.opacity   = '0';
+        el.style.transform = 'translate(-50%,-60%) scale(0.9)';
+        setTimeout(() => { el.remove(); res(); }, 400);
+      }, 600);
+    });
+  });
 }
 
 async function guardarTurnoOnline() {
@@ -920,16 +963,18 @@ async function guardarTurnoOnline() {
       jugador:      GS.activo,
       d4:           GS.lastD4,
       castillo:     3,
-      arroz:        GS.arroz[GS.activo],
-      puntos:       GS.paCurrent[GS.activo],
+      arroz:        GS.arroz[GS.activo] || 0,
+      puntos:       GS.paCurrent[GS.activo] || 0,
       tablero:      JSON.stringify(serializeTablero()),
-      fase:         GS.fase,
+      fase:         GS.fase || 'Movimiento',
       activo:       siguiente,
+      mazo_j1:      APP.mazo || '',
+      mazo_j2:      '',
     });
-    toast('Turno guardado · Esperando rival…','ok');
-    iniciarPollTurno();
+    toast('✓ Turno ' + GS.turn + ' guardado','ok');
+    if (APP.jugador && APP.jugador !== GS.activo) iniciarPollTurno();
   } catch(e) {
-    toast('Error guardando: ' + e.message,'err');
+    toast('Error: ' + e.message,'err');
   }
 }
 
